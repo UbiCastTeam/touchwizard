@@ -5,18 +5,18 @@ import os, imp
 from distutils.core import setup
 
 touchwizard = imp.load_source("version", "touchwizard/version.py")
-path = 'data/images/'
-images = [
-    path + f
-    for f in os.listdir(path)
-    if os.path.isfile(path + f)
-]
-path = 'data/icons/'
-icons = [
-    path + f
-    for f in os.listdir(path)
-    if os.path.isfile(path + f)
-]
+#path = 'data/images/'
+#images = [
+#    path + f
+#    for f in os.listdir(path)
+#    if os.path.isfile(path + f)
+#]
+#path = 'data/icons/'
+#icons = [
+#    path + f
+#    for f in os.listdir(path)
+#    if os.path.isfile(path + f)
+#]
 
 setup(
     name="touchwizard",
@@ -27,8 +27,8 @@ setup(
     url="http://code.google.com/p/touchwizard/",
     license="Gnu/LGPL",
     packages = ['touchwizard'],
-    data_files = [
-        ('share/touchwizard/images', images),
-        ('share/touchwizard/icons', icons),
-    ],
+#    data_files = [
+#        ('share/touchwizard/images', images),
+#        ('share/touchwizard/icons', icons),
+#    ],
 )
