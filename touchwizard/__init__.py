@@ -1,6 +1,6 @@
 from version import VERSION as __revision__
 from canvas import Canvas, quick_launch
-#from page import Page
+from page import Page
 #from icon import Icon
 
 page_path = None
