@@ -2,16 +2,18 @@
 # -*- coding: utf-8 -*
 
 import touchwizard
+from touchwizard import event
 import clutter
 import candies2
 
-class SamplePanel(candies2.container.ContainerAdapter,
+class SamplePanel(candies2.container.ContainerAdapter, event.User,
                                              clutter.Actor, clutter.Container):
     __gtype_name__ = 'SamplePanel'
     
     def __init__(self):
         candies2.container.ContainerAdapter.__init__(self)
         clutter.Actor.__init__(self)
+        event.User.__init__(self)
         
         self.label = clutter.Text()
         self.label.set_text('Welcome to the Touchwizard Test Page !')

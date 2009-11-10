@@ -3,15 +3,17 @@
 
 import clutter
 import gobject
+import event
+import types
 
-class Canvas(clutter.Actor, clutter.Container):
+class Canvas(clutter.Actor, clutter.Container, event.User):
     __gtype_name__ = 'Canvas'
     infobar_height = 23
     iconbar_height = 120
     
     def __init__(self, first_page):
         clutter.Actor.__init__(self)
-        self.first_page = first_page
+        event.User.__init__(self)
         
         self.infobar = clutter.Rectangle()
         self.infobar.set_color(clutter.color_from_string('LightGray'))
@@ -21,28 +23,48 @@ class Canvas(clutter.Actor, clutter.Container):
         self.iconbar.set_color(clutter.color_from_string('LightGray'))
         self.iconbar.set_parent(self)
         
-        self.available_pages = self.lookup_pages()
+        self.first_page = first_page
+        self.available_pages = dict()
         self.current_page = None
+        self.register_event('change_page')
+        gobject.idle_add(self.lookup_pages)
+        gobject.idle_add(self.display_page, first_page)
     
     def lookup_pages(self):
         import touchwizard
         
+        origin = ''
         path = touchwizard.page_path
         if path is None:
             if self.first_page is None:
                 return tuple()
+            self.available_pages[self.first_page.name] = self.first_page
             import sys
-            module = sys.modules[self.first_page.__module__].__file__
+            origin = sys.modules[self.first_page.__module__].__file__
             import os
-            path = os.path.dirname(os.path.abspath(os.path.expanduser(module)))
+            path = os.path.dirname(os.path.abspath(os.path.expanduser(origin)))
         import imp
+        pages = list()
         for f in os.listdir(path):
-            print f
-            if f.endswith('.py') and f != os.path.basename(f):
-                print 'ok'
+            if f.endswith('.py') and f != os.path.basename(origin):
                 module = imp.load_source(f[:-3], os.path.join(path, f))
-                print module
-            else: print 'not ok'
+                for attr_name in dir(module):
+                    if attr_name.startswith('__'):
+                        continue
+                    attribute = getattr(module, attr_name)
+                    if isinstance(attribute, type) \
+                                  and issubclass(attribute, touchwizard.Page) \
+                                  and attribute is not touchwizard.Page:
+                        self.available_pages[attribute.name] = attribute
+        #print self.available_pages
+    
+    def display_page(self, page):
+        pass
+    
+    def evt_change_page(self, event):
+        name = event.content
+        new_page = self.available_pages[name]
+        self.display_page(new_page)
     
     def do_get_preferred_width(self, for_height):
         import touchwizard
