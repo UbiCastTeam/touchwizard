@@ -2,18 +2,18 @@
 # -*- coding: utf-8 -*
 
 import touchwizard
-from touchwizard import event
+import easyevent
 import clutter
 import candies2
 
-class SamplePanel(candies2.container.ContainerAdapter, event.User,
+class SamplePanel(candies2.container.ContainerAdapter, easyevent.User,
                                              clutter.Actor, clutter.Container):
     __gtype_name__ = 'SamplePanel'
     
     def __init__(self):
         candies2.container.ContainerAdapter.__init__(self)
         clutter.Actor.__init__(self)
-        event.User.__init__(self)
+        easyevent.User.__init__(self)
         
         self.label = clutter.Text()
         self.label.set_text('Welcome to the Touchwizard Test Page !')
@@ -22,13 +22,13 @@ class SamplePanel(candies2.container.ContainerAdapter, event.User,
         
         self.button = candies2.ClassicButton('Quit')
         self.button.set_reactive(True)
-        self.button.connect('button-press-event', on_button_pressed)
+        self.button.connect('button-press-event', self.on_button_pressed)
         self.add(self.button)
         
         self.next_page = 'test2'
     
     def on_button_pressed(self, button, event):
-        self.launch_event('change_page', self.next_page)
+        self.launch_event('next_page', self.next_page)
         return True
     
     def do_get_preferred_width(self, for_height):
@@ -48,7 +48,7 @@ class SamplePanel(candies2.container.ContainerAdapter, event.User,
         )
     
     def do_allocate(self, box, flags):
-        self.label.allocate_available(5, 5, box.x2 - 10, box.y2 - 10, flags)
+        self.label.allocate_available_size(5, 5, box.x2 - 10, box.y2 - 10, flags)
         
         bbox = clutter.ActorBox()
         bbox.x1 = (box.x2 - box.x1) / 3
@@ -66,3 +66,17 @@ class Page(touchwizard.Page):
 
 if __name__ == '__main__':
     touchwizard.quick_launch(Page)
+    '''
+    stage = clutter.Stage()
+    stage.set_size(800, 480)
+    stage.connect('destroy', clutter.main_quit)
+    
+    panel = SamplePanel()
+    panel.set_position(0, 23)
+    panel.set_size(800, 360)
+    
+    stage.add(panel)
+    stage.show()
+
+    clutter.main()
+    '''
