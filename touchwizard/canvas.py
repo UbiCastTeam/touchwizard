@@ -158,6 +158,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             box.x2 = canvas_width
             box.y2 = canvas_height - self.iconbar_height
             self.current_page.panel.allocate(box, flags)
+        
+        clutter.Actor.do_allocate(self, box, flags)
     
     def do_foreach(self, func, data=None):
         children = [self.infobar, self.iconbar]
