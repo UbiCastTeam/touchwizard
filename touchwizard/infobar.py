@@ -3,18 +3,18 @@
 import clutter
 import easyevent
 import logging
+from candies2 import StretchText
 
 logger = logging.getLogger('touchwizard')
 
 class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     __gtype_name__ = 'InfoBar'
-    minimal_fontsize = 5
     
     def __init__(self):
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
         
-        self.info_label = clutter.Text()
+        self.info_label = StretchText()
         self.info_label.set_text('Hello World!')
         self.info_label.set_parent(self)
         
@@ -24,44 +24,17 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.info_label.set_text(event.content)
     
     def do_get_preferred_width(self, for_height):
-        lbl = clutter.Text()
-        lbl.set_text(self.info_label.get_text())
-        nat_width = lbl.get_preferred_width(for_height)[1]
-        lbl.set_font_name('Sans %s' %(self.minimal_fontsize))
-        min_width = lbl.get_width()
-        return min_width, nat_width
+        return self.info_label.get_preferred_width(for_height)
     
     def do_get_preferred_height(self, for_width):
-        lbl = clutter.Text()
-        lbl.set_text(self.info_label.get_text())
-        nat_height = lbl.get_preferred_height(for_width)[1]
-        lbl.set_font_name('Sans %s' %(self.minimal_fontsize))
-        min_height = lbl.get_height()
-        if for_width > self.get_preferred_width(-1)[0]:
-            pass  #TODO
-        return min_height, nat_height
+        return self.info_label.get_preferred_height(for_width)
     
     def do_allocate(self, box, flags):
         bar_width = box.x2 - box.x1
         bar_height = box.y2 - box.y1
-        fontsize = self.minimal_fontsize
         
-        lbl = clutter.Text()
-        text = self.info_label.get_text()
-        if text.strip():
-            lbl.set_text(text)
-            while True:
-                fontsize += 1
-                lbl.set_font_name('Sans %s' %(fontsize))
-                if (self.props.request_mode == clutter.REQUEST_HEIGHT_FOR_WIDTH
-                                                and lbl.get_width() > bar_width) \
-                   or (self.props.request_mode == clutter.REQUEST_WIDTH_FOR_HEIGHT
-                                                and lbl.get_height() > bar_height):
-                    fontsize -= 1
-                    break
-        print 'fontsize:', fontsize
-        self.info_label.set_font_name('Sans %s' %(fontsize))
-        self.info_label.allocate_preferred_size(flags)
+        lbox = clutter.ActorBox(0, 0, bar_width, bar_height)
+        self.info_label.allocate(lbox, flags)
         
         clutter.Actor.do_allocate(self, box, flags)
     
@@ -113,7 +86,7 @@ if __name__ == '__main__':
         def send_info(self, text):
             self.launch_event('info_message', text)
     info_sender = InfoSender()
-    gobject.timeout_add(2000, info_sender.send_info, 'Goodbye cruel world...')
-    gobject.timeout_add(4000, info_sender.send_info, '...')
-    gobject.timeout_add(6000, info_sender.send_info, '')
+    gobject.timeout_add(3000, info_sender.send_info, 'Goodbye cruel world...')
+    gobject.timeout_add(6000, info_sender.send_info, '...')
+    gobject.timeout_add(9000, info_sender.send_info, '')
     clutter.main()
