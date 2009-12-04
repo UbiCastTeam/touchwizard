@@ -8,3 +8,5 @@ uninstall:
 	sudo rm -v /usr/lib/python2.5/site-packages/touchwizard*.egg-info
 	sudo rm -vrf /usr/share/touchwizard
 
+clean:
+	rm -vrf build
