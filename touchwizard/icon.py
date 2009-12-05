@@ -10,6 +10,12 @@ import logging
 logger = logging.getLogger('icon')
 
 class IconRef(object):
+    """Abtract reference to an Icon instance. Avoid the need to instanciate
+    several times the same icon. Allow to change some initial states from
+    the referenced icon without changing the icon itself.
+    
+    Used for abstract page declarations.
+    """
     
     def __init__(self, icon, label=None, is_locked=None):
         self.icon = icon
@@ -26,6 +32,32 @@ class IconRef(object):
 
 
 class Icon(clutter.Actor, clutter.Container, easyevent.User):
+    """Represent a icon. Instanciated when defining an abstract page and built
+    as a clutter actor at runtime.
+    
+    (Note: the event types depends on the icon name passed to the constructor.)
+    
+    Listen for event:
+    
+      - lock_icon_<name> (is_locked)
+          Lock the icon (make it disabled) if the content is True or not set.
+          Unlock the icon (make it enabled) it the content is False.
+    
+      - action_icon_<name> (what_to_do)
+          Simulates an icon push. Depending on the content value, either it
+          discretely runs the operation that an icon push do (if content set to
+          Icon.ACTION_OPERATE_ONLY), or it only animates as when pushed but
+          does not anything else (if content set to Icon.ACTION_ANIMATE_ONLY),
+          or it does both actions as a real icon push (if content not set or
+          set to Icon.ACTION_ANIMATE_AND_OPERATE).
+    
+    Launch the event:
+    
+      - icon_<name>_actioned
+          Sent when the icon is pushed. Note that this event is also sent after
+          receiving an action_icon_<name> event type with a content set to
+          Icon.ACTION_OPERATE_ONLY or Icon.ACTION_ANIMATE_AND_OPERATE.
+    """
     ACTION_ANIMATE_AND_OPERATE, ACTION_ANIMATE_ONLY, ACTION_OPERATE_ONLY = \
                                                                        range(3)
     __gtype_name__ = 'Icon'
@@ -42,8 +74,12 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.event_type = self.actioned_event_type_pattern %(name)
         self.cooldown_ms = self.default_cooldown
         self.is_locked = False
+        self.__is_built = False
     
     def build(self):
+        if self.__is_built:
+            return
+        self.__is_built = True
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
         
@@ -59,7 +95,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.register_event(action_event_type)
         setattr(self, 'evt_' + action_event_type, self.action)
         
-        import __init__ as touchwizard
+        import touchwizard
         picture_path = \
                os.path.join(touchwizard.icon_path or '', "%s.png" %(self.name))
         if not os.path.exists(picture_path):
@@ -83,15 +119,28 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.label.set_parent(self)
         self.label.set_text(self.label_text)
     
-    """
     def do_get_preferred_width(self, for_height):
-        pass
+        label_width = self.label.get_preferred_width(-1)
+        picture_width = self.picture.get_preferred_width(-1)
+        icon_width = (
+            max(label_width[0], picture_width[0]),
+            max(label_width[1], picture_width[1])
+        )
+        return icon_width
     
     def do_get_preferred_height(self, for_width):
-        pass
-    """
+        label_height = self.label.get_preferred_height(for_width)
+        picture_height = self.picture.get_preferred_height(for_width)
+        icon_height = (
+            label_height[0] + picture_height[0],
+            label_height[1] + picture_height[1]
+        )
+        return icon_height
     
     def do_allocate(self, box, flags):
+        icon_width = box.x2 - box.x1
+        icon_height = box.y2 - box.y1
+        
         boxes = {
             self.label: clutter.ActorBox(),
             self.picture: clutter.ActorBox()
@@ -100,6 +149,8 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         label_height = self.label.get_preferred_size()[3]
         picture_width = self.picture.get_preferred_size()[2]
         picture_height = self.picture.get_preferred_size()[3]
+        if isinstance(self.picture, candies2.ClassicButton):
+            picture_height = icon_height - label_height
         
         if label_width > picture_width:
             largest = self.label
@@ -119,6 +170,9 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         boxes[self.picture].x2 = boxes[self.picture].x1 + picture_width
         boxes[self.picture].y1 = boxes[self.label].y2
         boxes[self.picture].y2 = boxes[self.picture].y1 + picture_height
+        
+        b = boxes[self.label]
+        b = boxes[self.picture]
         
         self.label.allocate(boxes[self.label], flags)
         self.picture.allocate(boxes[self.picture], flags)

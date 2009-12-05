@@ -35,23 +35,33 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
       - wizard_quit
           Sent after prepare_quit to notify the main script that it can end
           the process.
-    
     """
     __gtype_name__ = 'Canvas'
     infobar_height = 23
-    iconbar_height = 120
+    #iconbar_height = 120
     
     def __init__(self, first_page):
+        import touchwizard
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
         
-        self.infobar = clutter.Rectangle()
-        self.infobar.set_color(clutter.color_from_string('LightGray'))
+        self.session = touchwizard.Session()
+        
+        self.infobar = touchwizard.InfoBar()
+        #self.infobar.set_color(clutter.color_from_string('LightGray'))
         self.infobar.set_parent(self)
         
-        self.iconbar = clutter.Rectangle()
-        self.iconbar.set_color(clutter.color_from_string('LightGray'))
+        self.iconbar = touchwizard.IconBar()
+        #self.iconbar.set_color(clutter.color_from_string('LightGray'))
         self.iconbar.set_parent(self)
+        
+        self.home_icon = touchwizard.Icon('home')
+        self.home_icon.build()
+        easyevent.forward_event('icon_home_actioned', 'request_quit')
+        
+        self.previous_icon = touchwizard.Icon('previous')
+        self.previous_icon.build()
+        easyevent.forward_event('icon_previous_actioned', 'previous_page')
         
         self.history = list()
         self.first_page = first_page
@@ -98,10 +108,25 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.current_page = page
         self.current_page.panel.set_parent(self)
         self.current_page.panel.lower_bottom()
+        self.iconbar.clear()
+        if self.history:
+            icon = self.history[-1].my_icon
+            if icon is not None:
+                icon.build()
+            else:
+                icon = self.previous_icon
+        else:
+            icon = self.home_icon
+        self.iconbar.set_previous(icon)
+        for icon in self.current_page.icons:
+            icon.build()
+            self.iconbar.add(icon)
+        self.current_page.panel.show()
     
     def evt_next_page(self, event):
         name = event.content
         logger.info('Page %r requested.', name)
+        self.current_page.panel.hide()
         self.current_page.panel.unparent()
         self.history.append(self.current_page)
         new_page = self.available_pages[name]
@@ -113,6 +138,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.evt_request_quit(event)
             return
         logger.info('Back to %r page.', previous.name)
+        self.current_page.panel.hide()
         self.current_page.panel.unparent()
         self.current_page.panel.destroy()
         self.display_page(previous)
@@ -121,6 +147,13 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         logger.info('Quit requested.')
         self.launch_event('prepare_quit')
         self.launch_event('wizard_quit')
+    
+    def evt_request_session(self, event):
+        self.launch_event('dispatch_session', self.session)
+    
+    def evt_update_session(self, event):
+        self.session.update(event)
+        self.launch_event('dispatch_session', self.session)
     
     def do_get_preferred_width(self, for_height):
         import touchwizard
@@ -136,27 +169,28 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         canvas_width = box.x2 - box.x1
         canvas_height = box.y2 - box.y1
         
-        box = clutter.ActorBox()
-        box.x1 = 0
-        box.y1 = 0
-        box.x2 = canvas_width
-        box.y2 = self.infobar_height
-        self.infobar.allocate(box, flags)
+        child_box = clutter.ActorBox()
+        child_box.x1 = 0
+        child_box.y1 = 0
+        child_box.x2 = canvas_width
+        child_box.y2 = self.infobar_height
+        self.infobar.allocate(child_box, flags)
         
-        box = clutter.ActorBox()
-        box.x1 = 0
-        box.y1 = canvas_height - self.iconbar_height
-        box.x2 = canvas_width
-        box.y2 = canvas_height
-        self.iconbar.allocate(box, flags)
+        iconbar_height = self.iconbar.get_preferred_height(canvas_width)[1]
+        child_box = clutter.ActorBox()
+        child_box.x1 = 0
+        child_box.y1 = canvas_height - iconbar_height
+        child_box.x2 = canvas_width
+        child_box.y2 = canvas_height
+        self.iconbar.allocate(child_box, flags)
         
         if self.current_page is not None:
-            box = clutter.ActorBox()
-            box.x1 = 0
-            box.y1 = self.infobar_height
-            box.x2 = canvas_width
-            box.y2 = canvas_height - self.iconbar_height
-            self.current_page.panel.allocate(box, flags)
+            child_box = clutter.ActorBox()
+            child_box.x1 = 0
+            child_box.y1 = self.infobar_height
+            child_box.x2 = canvas_width
+            child_box.y2 = canvas_height - iconbar_height
+            self.current_page.panel.allocate(child_box, flags)
         
         clutter.Actor.do_allocate(self, box, flags)
     
@@ -192,7 +226,6 @@ def quick_launch(page):
     stage.connect('destroy', clutter.main_quit)
     
     canvas = Canvas(page)
-    
     stage.add(canvas)
     stage.show()
     
