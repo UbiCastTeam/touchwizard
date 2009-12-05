@@ -35,7 +35,6 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
       - wizard_quit
           Sent after prepare_quit to notify the main script that it can end
           the process.
-    
     """
     __gtype_name__ = 'Canvas'
     infobar_height = 23
@@ -45,6 +44,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         import touchwizard
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
+        
+        self.session = touchwizard.Session()
         
         self.infobar = touchwizard.InfoBar()
         #self.infobar.set_color(clutter.color_from_string('LightGray'))
@@ -146,6 +147,13 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         logger.info('Quit requested.')
         self.launch_event('prepare_quit')
         self.launch_event('wizard_quit')
+    
+    def evt_request_session(self, event):
+        self.launch_event('dispatch_session', self.session)
+    
+    def evt_update_session(self, event):
+        self.session.update(event)
+        self.launch_event('dispatch_session', self.session)
     
     def do_get_preferred_width(self, for_height):
         import touchwizard
