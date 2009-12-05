@@ -14,9 +14,10 @@ class SamplePanel2(candies2.container.ContainerAdapter, easyevent.User,
         candies2.container.ContainerAdapter.__init__(self)
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
+        self.connect('notify::visible', self.on_show)
         
         self.label = clutter.Text()
-        self.label.set_text('Really quit ?')
+        #self.label.set_text('Really quit ?')
         self.label.set_font_name('Sans 26')
         self.add(self.label)
         
@@ -29,6 +30,9 @@ class SamplePanel2(candies2.container.ContainerAdapter, easyevent.User,
         self.cancel.set_reactive(True)
         self.cancel.connect('button-press-event', self.on_cancel_pressed)
         self.add(self.cancel)
+    
+    def on_show(self, panel, event):
+        self.launch_event('info_message', 'Really quit ?')
     
     def on_ok_pressed(self, button, event):
         self.launch_event('request_quit')

@@ -5,6 +5,10 @@ import touchwizard
 import easyevent
 import clutter
 import candies2
+import os
+
+__path__ = os.path.dirname(os.path.abspath(os.path.expanduser(__file__)))
+touchwizard.icon_path = __path__
 
 class SamplePanel(candies2.container.ContainerAdapter, easyevent.User,
                                              clutter.Actor, clutter.Container):
@@ -14,9 +18,10 @@ class SamplePanel(candies2.container.ContainerAdapter, easyevent.User,
         candies2.container.ContainerAdapter.__init__(self)
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
+        self.connect('notify::visible', self.on_show)
         
         self.label = clutter.Text()
-        self.label.set_text('Welcome to the Touchwizard Test Page !')
+        #self.label.set_text('Welcome to the Touchwizard Test Page !')
         self.label.set_font_name('Sans 26')
         self.add(self.label)
         
@@ -26,6 +31,9 @@ class SamplePanel(candies2.container.ContainerAdapter, easyevent.User,
         self.add(self.button)
         
         self.next_page = 'test2'
+    
+    def on_show(self, panel, event):
+        self.launch_event('info_message', 'Welcome to the Touchwizard Test Page !')
     
     def on_button_pressed(self, button, event):
         self.launch_event('next_page', self.next_page)
