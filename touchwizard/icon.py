@@ -26,6 +26,32 @@ class IconRef(object):
 
 
 class Icon(clutter.Actor, clutter.Container, easyevent.User):
+    """Represent a icon. Instanciated when defining an abstract page and built
+    as a clutter actor at runtime.
+    
+    (Note: the event types depends on the icon name passed to the constructor.)
+    
+    Listen for event:
+    
+      - lock_icon_<name> (is_locked)
+          Lock the icon (make it disabled) if the content is True or not set.
+          Unlock the icon (make it enabled) it the content is False.
+    
+      - action_icon_<name> (what_to_do)
+          Simulates an icon push. Depending on the content value, either it
+          discretely runs the operation that an icon push do (if content set to
+          Icon.ACTION_OPERATE_ONLY), or it only animates as when pushed but
+          does not anything else (if content set to Icon.ACTION_ANIMATE_ONLY),
+          or it does both actions as a real icon push (if content not set or
+          set to Icon.ACTION_ANIMATE_AND_OPERATE).
+    
+    Launch the event:
+    
+      - icon_<name>_actioned
+          Sent when the icon is pushed. Note that this event is also sent after
+          receiving an action_icon_<name> event type with a content set to
+          Icon.ACTION_OPERATE_ONLY or Icon.ACTION_ANIMATE_AND_OPERATE.
+    """
     ACTION_ANIMATE_AND_OPERATE, ACTION_ANIMATE_ONLY, ACTION_OPERATE_ONLY = \
                                                                        range(3)
     __gtype_name__ = 'Icon'

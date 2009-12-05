@@ -8,6 +8,19 @@ from candies2 import StretchText
 logger = logging.getLogger('touchwizard')
 
 class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
+    """
+    The icon bar at the top of the wizard canvas.
+    
+    (Should only be used via events.)
+    
+    Listen for event:
+    
+      - info_message (text)
+          Display the content to the info bar. Replaces the previous displayed
+          text.
+    
+    Launch no event.
+    """
     __gtype_name__ = 'InfoBar'
     
     def __init__(self):

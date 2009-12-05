@@ -7,6 +7,15 @@ import logging
 logger = logging.getLogger('touchwizard')
 
 class IconBar(clutter.Actor, clutter.Container, easyevent.User):
+    """
+    The icon bar at the bottom of the wizard canvas.
+    
+    (Should not be used directly.)
+    
+    Listen for no event.
+    
+    Launch no event.
+    """
     __gtype_name__ = 'IconBar'
     
     def __init__(self):
