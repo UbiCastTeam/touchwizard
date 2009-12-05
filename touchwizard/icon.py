@@ -10,6 +10,12 @@ import logging
 logger = logging.getLogger('icon')
 
 class IconRef(object):
+    """Abtract reference to an Icon instance. Avoid the need to instanciate
+    several times the same icon. Allow to change some initial states from
+    the referenced icon without changing the icon itself.
+    
+    Used for abstract page declarations.
+    """
     
     def __init__(self, icon, label=None, is_locked=None):
         self.icon = icon
