@@ -26,13 +26,17 @@ if __name__ == '__main__':
     red = touchwizard.Icon('red_button')
     red.build()
     red.set_x(264)
+    
+    toggle = touchwizard.Icon('toggle')
+    toggle.build()
+    toggle.set_x(396)
 
     easyevent.forward_event(
                          'icon_red_button_actioned', 'lock_icon_blue_button', True)
     easyevent.forward_event(
                       'icon_green_button_actioned', 'lock_icon_blue_button', False)
 
-    stage.add(green, blue, red)
+    stage.add(green, blue, red, toggle)
     stage.show()
 
     clutter.main()
