@@ -17,10 +17,11 @@ class IconRef(object):
     Used for abstract page declarations.
     """
     
-    def __init__(self, icon, label=None, is_locked=None):
+    def __init__(self, icon, label=None, is_locked=None, is_on=None):
         self.icon = icon
         self.label = label
         self.is_locked = is_locked
+        self.is_on = is_on
     
     def get_icon(self):
         icon = Icon(self.icon.name, self.icon.label)
@@ -28,6 +29,8 @@ class IconRef(object):
             icon.label = self.label
         if self.is_locked is not None:
             icon.is_locked = self.is_locked
+        if self.is_on is not None:
+            icon.is_on = self.is_on
         return icon
 
 
@@ -74,6 +77,10 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.event_type = self.actioned_event_type_pattern %(name)
         self.cooldown_ms = self.default_cooldown
         self.is_locked = False
+        self.is_on = None
+        self.picture = None
+        self.picture_on = None
+        self.picture_off = None
         self.__is_built = False
     
     def build(self):
@@ -95,19 +102,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.register_event(action_event_type)
         setattr(self, 'evt_' + action_event_type, self.action)
         
-        import touchwizard
-        picture_path = \
-               os.path.join(touchwizard.icon_path or '', "%s.png" %(self.name))
-        if not os.path.exists(picture_path):
-            self.picture = candies2.ClassicButton('no icon')
-        else:
-            self.picture = clutter.Texture(picture_path)
-            self.picture.set_keep_aspect_ratio(True)
-        candies2.SimpleClick(self.picture)
-        self.picture.set_parent(self)
-        self.picture.set_reactive(True)
-        self.picture.connect('simple-click-event',
-                                                     lambda src: self.action())
+        self._build_picture()
         
         self.timeline = clutter.Timeline(600)
         alpha = clutter.Alpha(self.timeline, clutter.EASE_OUT_ELASTIC)
@@ -118,6 +113,51 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.label = clutter.Text()
         self.label.set_parent(self)
         self.label.set_text(self.label_text)
+    
+    def _build_picture(self):
+        import touchwizard
+        icon_path = touchwizard.icon_path or ''
+        picture_path = os.path.join(icon_path, "%s.png" %(self.name))
+        
+        picture_on = os.path.join(icon_path, "%s_on.png" %(self.name))
+        picture_off = os.path.join(icon_path, "%s_off.png" %(self.name))
+        if os.path.exists(picture_on):
+            self.picture_on = picture_on
+        if os.path.exists(picture_off):
+            self.picture_off = picture_off
+        
+        is_on = None
+        if os.path.exists(picture_path):
+            self.picture = clutter.Texture(picture_path)
+            self.picture.set_keep_aspect_ratio(True)
+        elif self.picture_on is not None and self.picture_off is not None:
+            picture_path = self.picture_off
+            is_on = self.is_on is True
+            if self.is_on:
+                picture_path = self.picture_on
+            self.picture = clutter.Texture(picture_path)
+            self.picture.set_keep_aspect_ratio(True)
+        else:
+            logger.error('Icon file %s does not exist.', picture_path)
+            self.picture = candies2.ClassicButton('no icon')
+        
+        candies2.SimpleClick(self.picture)
+        self.picture.set_parent(self)
+        self.picture.set_reactive(True)
+        self.picture.connect('simple-click-event', lambda src: self.action())
+        
+        if not isinstance(self.picture, candies2.ClassicButton):
+            if self.picture_on is None and self.picture_off is not None:
+                self.picture_on = picture_path
+                is_on = True
+            elif self.picture_off is None and self.picture_on is not None:
+                self.picture_off = picture_path
+                is_on = False
+        
+        is_on = is_on is True
+        if self.is_on is not None and is_on != self.is_on:
+            self.toggle()
+        self.is_on = is_on
     
     def do_get_preferred_width(self, for_height):
         label_width = self.label.get_preferred_width(-1)
@@ -182,6 +222,9 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         what_to_do = self.ACTION_ANIMATE_AND_OPERATE
         if event is not None and event.content is not None:
             what_to_do = event.content
+        if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY):
+            self.toggle()
+            self.animate()
         if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_OPERATE_ONLY):
             if not self.is_locked:
                 self.lock_for(self.cooldown_ms)
@@ -189,11 +232,17 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             else:
                 self.launch_event('info',
                                'Please wait %d seconds' %(self.cooldown_ms / 1000))
-        if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY):
-            self.animate()
     
     def animate(self):
         self.timeline.start()
+    
+    def toggle(self):
+        if self.picture_on is not None and self.picture_off is not None:
+            self.is_on = not self.is_on
+            picture_path = self.picture_off
+            if self.is_on:
+                picture_path = self.picture_on
+            self.picture.set_from_file(picture_path)
     
     def lock(self):
         logger.debug('Locking %s.', self.name)
