@@ -1,5 +1,6 @@
 from version import VERSION as __revision__
 from canvas import Canvas, quick_launch
+from session import Session
 from infobar import InfoBar
 from iconbar import IconBar
 from page import Page
