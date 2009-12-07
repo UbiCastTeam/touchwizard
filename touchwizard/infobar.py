@@ -27,6 +27,10 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
         
+        self.background = clutter.Rectangle()
+        self.background.set_color('LightGray')
+        self.background.set_parent(self)
+        
         self.info_label = StretchText()
         self.info_label.set_text('Hello World!')
         self.info_label.set_parent(self)
@@ -47,17 +51,18 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         bar_height = box.y2 - box.y1
         
         lbox = clutter.ActorBox(0, 0, bar_width, bar_height)
+        self.background.allocate(lbox, flags)
         self.info_label.allocate(lbox, flags)
         
         clutter.Actor.do_allocate(self, box, flags)
     
     def do_foreach(self, func, data=None):
-        children = [self.info_label,]
+        children = [self.background, self.info_label,]
         for child in children:
             func(child, data)
     
     def do_paint(self):
-        children = [self.info_label,]
+        children = [self.background, self.info_label,]
         for child in children:
             child.paint()
     
