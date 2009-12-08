@@ -33,7 +33,8 @@ class SamplePanel(candies2.container.ContainerAdapter, easyevent.User,
         self.next_page = 'test2'
     
     def on_show(self, panel, event):
-        self.launch_event('info_message', 'Welcome to the Touchwizard Test Page !')
+        if self.props.visible:
+            self.launch_event('info_message', 'Welcome to the Touchwizard Test Page !')
     
     def on_button_pressed(self, button, event):
         self.launch_event('next_page', self.next_page)
