@@ -5,6 +5,7 @@ import gobject
 import easyevent
 import types
 import logging
+import os
 
 logger = logging.getLogger('touchwizard')
 
@@ -83,7 +84,6 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.available_pages[self.first_page.name] = self.first_page
             import sys
             origin = sys.modules[self.first_page.__module__].__file__
-            import os
             path = os.path.dirname(os.path.abspath(os.path.expanduser(origin)))
         import imp
         pages = list()
@@ -120,7 +120,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.iconbar.set_previous(icon)
         for icon in self.current_page.icons:
             icon.build()
-            self.iconbar.add(icon)
+            self.iconbar.append(icon)
         self.current_page.panel.show()
     
     def evt_next_page(self, event):
