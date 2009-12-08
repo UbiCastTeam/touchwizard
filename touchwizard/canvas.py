@@ -48,6 +48,14 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         
         self.session = touchwizard.Session()
         
+        self.background = None
+        if touchwizard.canvas_bg:
+            if not os.path.exists(touchwizard.canvas_bg):
+                logger.error('Canvas background %s not found.',
+                                                         touchwizard.canvas_bg)
+            self.background = clutter.Texture(touchwizard.canvas_bg)
+            self.background.set_parent(self)
+        
         self.infobar = touchwizard.InfoBar()
         #self.infobar.set_color(clutter.color_from_string('LightGray'))
         self.infobar.set_parent(self)
@@ -169,6 +177,10 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         canvas_width = box.x2 - box.x1
         canvas_height = box.y2 - box.y1
         
+        if self.background:
+            child_box = clutter.ActorBox(0, 0, canvas_width, canvas_height)
+            self.background.allocate(child_box, flags)
+        
         child_box = clutter.ActorBox()
         child_box.x1 = 0
         child_box.y1 = 0
@@ -196,6 +208,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     
     def do_foreach(self, func, data=None):
         children = [self.infobar, self.iconbar]
+        if self.background:
+            children.insert(0, self.background)
         if self.current_page is not None:
             children.append(self.current_page.panel)
         for child in children:
@@ -203,6 +217,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     
     def do_paint(self):
         children = [self.infobar, self.iconbar]
+        if self.background:
+            children.insert(0, self.background)
         if self.current_page is not None:
             children.append(self.current_page.panel)
         for child in children:

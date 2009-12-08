@@ -8,6 +8,8 @@ from icon import Icon
 
 page_path = None
 icon_path = None
+canvas_bg = None
+
 # Acme
 canvas_width = 1024
 canvas_height = 768
