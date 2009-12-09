@@ -111,6 +111,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.animation.apply(self.picture)
         
         self.label = clutter.Text()
+        self.label.set_font_name('Sans 16')
         self.label.set_parent(self)
         self.label.set_text(self.label_text)
     
