@@ -204,8 +204,11 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         boxes[self.picture].y2 = icon_height
         
         label_height = boxes[self.picture].y1 / 2
-        label_width = min(icon_width, self.label.get_preferred_width(label_height)[1])
-        boxes[self.label].y1 = label_height / 2
+        label_width = self.label.get_preferred_width(label_height)[1]
+        if label_width > icon_width:
+            label_width = icon_width
+            label_height = self.label.get_preferred_height(label_width)[1]
+        boxes[self.label].y1 = (boxes[self.picture].y1 - label_height) / 2
         boxes[self.label].y2 = boxes[self.label].y1 + label_height
         
         if label_width > picture_width:
