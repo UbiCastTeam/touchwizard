@@ -38,8 +38,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
           the process.
     """
     __gtype_name__ = 'Canvas'
-    infobar_height = 23
-    #iconbar_height = 120
+    #infobar_height = 104
+    #iconbar_height = 200
     
     def __init__(self, first_page):
         import touchwizard
@@ -57,11 +57,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.background.set_parent(self)
         
         self.infobar = touchwizard.InfoBar()
-        #self.infobar.set_color(clutter.color_from_string('LightGray'))
         self.infobar.set_parent(self)
         
         self.iconbar = touchwizard.IconBar()
-        #self.iconbar.set_color(clutter.color_from_string('LightGray'))
         self.iconbar.set_parent(self)
         
         self.home_icon = touchwizard.Icon('home')
@@ -177,32 +175,31 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         canvas_width = box.x2 - box.x1
         canvas_height = box.y2 - box.y1
         
-        if self.background:
-            child_box = clutter.ActorBox(0, 0, canvas_width, canvas_height)
-            self.background.allocate(child_box, flags)
-        
-        child_box = clutter.ActorBox()
-        child_box.x1 = 0
-        child_box.y1 = 0
-        child_box.x2 = canvas_width
-        child_box.y2 = self.infobar_height
-        self.infobar.allocate(child_box, flags)
+        infobar_height = self.infobar.get_preferred_height(canvas_width)[1]
+        infobar_box = clutter.ActorBox()
+        infobar_box.x1 = 0
+        infobar_box.y1 = 0
+        infobar_box.x2 = canvas_width
+        infobar_box.y2 = infobar_height
+        self.infobar.allocate(infobar_box, flags)
         
         iconbar_height = self.iconbar.get_preferred_height(canvas_width)[1]
-        child_box = clutter.ActorBox()
-        child_box.x1 = 0
-        child_box.y1 = canvas_height - iconbar_height
-        child_box.x2 = canvas_width
-        child_box.y2 = canvas_height
-        self.iconbar.allocate(child_box, flags)
+        iconbar_box = clutter.ActorBox()
+        iconbar_box.x1 = 0
+        iconbar_box.y1 = canvas_height - iconbar_height
+        iconbar_box.x2 = canvas_width
+        iconbar_box.y2 = canvas_height
+        self.iconbar.allocate(iconbar_box, flags)
         
+        panel_box = clutter.ActorBox()
+        panel_box.x1 = 0
+        panel_box.y1 = infobar_height
+        panel_box.x2 = canvas_width
+        panel_box.y2 = canvas_height - iconbar_height
+        if self.background is not None:
+            self.background.allocate(panel_box, flags)
         if self.current_page is not None:
-            child_box = clutter.ActorBox()
-            child_box.x1 = 0
-            child_box.y1 = self.infobar_height
-            child_box.x2 = canvas_width
-            child_box.y2 = canvas_height - iconbar_height
-            self.current_page.panel.allocate(child_box, flags)
+            self.current_page.panel.allocate(panel_box, flags)
         
         clutter.Actor.do_allocate(self, box, flags)
     
