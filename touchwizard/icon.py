@@ -110,9 +110,18 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
                         clutter.BehaviourScale(1.1, 1.1, 1.0, 1.0, alpha=alpha)
         self.animation.apply(self.picture)
         
-        self.label = clutter.Text()
+        self.label = candies2.StretchText()
+        self.label.set_font_name('Sans 16')
         self.label.set_parent(self)
         self.label.set_text(self.label_text)
+        
+        #self.back = clutter.Rectangle()
+        #self.back.set_color('Yellow')
+        #self.back.set_parent(self)
+        
+        #self.lblback = clutter.Rectangle()
+        #self.lblback.set_color('Pink')
+        #self.lblback.set_parent(self)
     
     def _build_picture(self):
         import touchwizard
@@ -160,8 +169,10 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.is_on = is_on
     
     def do_get_preferred_width(self, for_height):
-        label_width = self.label.get_preferred_width(-1)
         picture_width = self.picture.get_preferred_width(-1)
+        picture_height = self.picture.get_preferred_height(picture_width[1])[1]
+        label_height = (for_height - picture_height) / 2
+        label_width = self.label.get_preferred_width(label_height)
         icon_width = (
             max(label_width[0], picture_width[0]),
             max(label_width[1], picture_width[1])
@@ -185,37 +196,39 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             self.label: clutter.ActorBox(),
             self.picture: clutter.ActorBox()
         }
-        label_width = self.label.get_preferred_size()[2]
-        label_height = self.label.get_preferred_size()[3]
-        picture_width = self.picture.get_preferred_size()[2]
-        picture_height = self.picture.get_preferred_size()[3]
+        
+        picture_width, picture_height = self.picture.get_preferred_size()[2:]
         if isinstance(self.picture, candies2.ClassicButton):
             picture_height = icon_height - label_height
+        boxes[self.picture].y1 = icon_height - picture_height
+        boxes[self.picture].y2 = icon_height
+        
+        label_height = boxes[self.picture].y1 / 2
+        label_width = min(icon_width, self.label.get_preferred_width(label_height)[1])
+        boxes[self.label].y1 = label_height / 2
+        boxes[self.label].y2 = boxes[self.label].y1 + label_height
         
         if label_width > picture_width:
             largest = self.label
+            largest_width = label_width
             thinest = self.picture
+            thinest_width = picture_width
         else:
             thinest = self.label
+            thinest_width = label_width
             largest = self.picture
-        largest_width = largest.get_preferred_size()[2]
-        thinest_width = thinest.get_preferred_size()[2]
+            largest_width = picture_width
+        thinest.get_preferred_size()[2]
         boxes[thinest].x1 = (largest_width - thinest_width) / 2
         boxes[largest].x1 = 0
         
-        boxes[self.label].x2 = boxes[self.label].x1 + label_width
-        boxes[self.label].y1 = 0
-        boxes[self.label].y2 = label_height
-        
         boxes[self.picture].x2 = boxes[self.picture].x1 + picture_width
-        boxes[self.picture].y1 = boxes[self.label].y2
-        boxes[self.picture].y2 = boxes[self.picture].y1 + picture_height
+        boxes[self.label].x2 = boxes[self.label].x1 + label_width
         
-        b = boxes[self.label]
-        b = boxes[self.picture]
-        
+        #self.lblback.allocate(boxes[self.label], flags)
         self.label.allocate(boxes[self.label], flags)
         self.picture.allocate(boxes[self.picture], flags)
+        #self.back.allocate(clutter.ActorBox(0, 0, icon_width, icon_height), flags)
         clutter.Actor.do_allocate(self, box, flags)
     
     def action(self, event=None):
@@ -272,11 +285,13 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     
     def do_foreach(self, func, data=None):
         children = (self.label, self.picture)
+        #children = (self.back, self.lblback) + children
         for child in children:
             func(child, data)
     
     def do_paint(self):
         children = (self.label, self.picture)
+        #children = (self.back, self.lblback) + children
         for child in children:
             child.paint()
     

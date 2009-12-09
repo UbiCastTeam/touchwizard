@@ -3,7 +3,8 @@
 import clutter
 import easyevent
 import logging
-from candies2 import StretchText
+import candies2
+import os
 
 logger = logging.getLogger('touchwizard')
 
@@ -24,15 +25,23 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     __gtype_name__ = 'InfoBar'
     
     def __init__(self):
+        import touchwizard
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
         
         self.background = clutter.Rectangle()
-        self.background.set_color('LightGray')
+        self.background.set_color(clutter.color_from_string('LightGray'))
+        if touchwizard.infobar_bg:
+            if os.path.exists(touchwizard.infobar_bg):
+                self.background = clutter.Texture(touchwizard.infobar_bg)
+                self.background.set_keep_aspect_ratio(True)
+            else:
+                logger.error('InfoBar background %s not found.',
+                                                        touchwizard.infobar_bg)
         self.background.set_parent(self)
         
-        self.info_label = StretchText()
-        self.info_label.set_text('Hello World!')
+        self.info_label = candies2.StretchText()
+        #self.info_label.set_text('Hello World!')
         self.info_label.set_parent(self)
         
         self.register_event('info_message')
@@ -44,14 +53,23 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         return self.info_label.get_preferred_width(for_height)
     
     def do_get_preferred_height(self, for_width):
-        return self.info_label.get_preferred_height(for_width)
+        min_height, nat_height = \
+                           self.info_label.get_preferred_height(for_width - 10)
+        if isinstance(self.background, clutter.Texture):
+            nat_height = self.background.get_preferred_height(for_width)[1]
+        return min_height, nat_height
     
     def do_allocate(self, box, flags):
         bar_width = box.x2 - box.x1
         bar_height = box.y2 - box.y1
         
-        lbox = clutter.ActorBox(0, 0, bar_width, bar_height)
-        self.background.allocate(lbox, flags)
+        bgbox = clutter.ActorBox(0, 0, bar_width, bar_height)
+        self.background.allocate(bgbox, flags)
+        
+        label_height = bar_height
+        if '\n' not in self.info_label.get_text():
+            label_height = bar_height / 2
+        lbox = clutter.ActorBox(5, 0, bar_width - 10, label_height)
         self.info_label.allocate(lbox, flags)
         
         clutter.Actor.do_allocate(self, box, flags)

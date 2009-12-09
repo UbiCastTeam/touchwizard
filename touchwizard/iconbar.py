@@ -3,6 +3,7 @@
 import clutter
 import easyevent
 import logging
+import os
 
 logger = logging.getLogger('touchwizard')
 
@@ -19,12 +20,20 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
     __gtype_name__ = 'IconBar'
     
     def __init__(self):
+        import touchwizard
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
         
         self.background = clutter.Rectangle()
-        self.background.set_parent(self)
         self.background.set_color(clutter.color_from_string('LightGray'))
+        if touchwizard.iconbar_bg:
+            if os.path.exists(touchwizard.iconbar_bg):
+                self.background = clutter.Texture(touchwizard.iconbar_bg)
+                self.background.set_keep_aspect_ratio(True)
+            else:
+                logger.error('Iconbar background %s not found.',
+                                                        touchwizard.iconbar_bg)
+        self.background.set_parent(self)
         
         self._previous = None
         self._icons = list()
@@ -92,6 +101,8 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
             min_height = max(min_height, min_icon)
             nat_height = max(nat_height, nat_icon)
         
+        if isinstance(self.background, clutter.Texture):
+            nat_height = self.background.get_preferred_height(for_width)[1]
         return min_height, nat_height
     
     def do_allocate(self, box, flags):
