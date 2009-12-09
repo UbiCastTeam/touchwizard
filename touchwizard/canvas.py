@@ -108,6 +108,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         #print self.available_pages
     
     def display_page(self, page):
+        import touchwizard
         if isinstance(page, type):
             self.current_page = page()
         else:
@@ -125,6 +126,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             icon = self.home_icon
         self.iconbar.set_previous(icon)
         for icon in self.current_page.icons:
+            if isinstance(icon, touchwizard.IconRef):
+                icon = icon.get_icon()
             icon.build()
             self.iconbar.append(icon)
         self.current_page.panel.show()

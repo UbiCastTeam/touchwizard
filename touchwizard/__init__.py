@@ -4,7 +4,7 @@ from session import Session
 from infobar import InfoBar
 from iconbar import IconBar
 from page import Page
-from icon import Icon
+from icon import Icon, IconRef
 
 page_path = None
 icon_path = None

@@ -24,9 +24,9 @@ class IconRef(object):
         self.is_on = is_on
     
     def get_icon(self):
-        icon = Icon(self.icon.name, self.icon.label)
+        icon = Icon(self.icon.name, self.icon.label_text)
         if self.label is not None:
-            icon.label = self.label
+            icon.label_text = self.label
         if self.is_locked is not None:
             icon.is_locked = self.is_locked
         if self.is_on is not None:
@@ -167,6 +167,9 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         if self.is_on is not None and is_on != self.is_on:
             self.toggle()
         self.is_on = is_on
+        
+        if self.is_locked:
+            self.lock()
     
     def do_get_preferred_width(self, for_height):
         picture_width = self.picture.get_preferred_width(-1)
