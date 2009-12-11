@@ -202,7 +202,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         
         picture_width, picture_height = self.picture.get_preferred_size()[2:]
         if isinstance(self.picture, candies2.ClassicButton):
-            picture_height = icon_height - label_height
+            picture_height = icon_height - 128
         boxes[self.picture].y1 = icon_height - picture_height
         boxes[self.picture].y2 = icon_height
         

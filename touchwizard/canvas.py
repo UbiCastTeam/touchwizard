@@ -107,7 +107,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         logger.info('%d pages found.', len(self.available_pages))
         #print self.available_pages
     
-    def display_page(self, page):
+    def display_page(self, page, icons=None):
         import touchwizard
         if isinstance(page, type):
             self.current_page = page()
@@ -117,7 +117,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.current_page.panel.lower_bottom()
         self.iconbar.clear()
         if self.history:
-            icon = self.history[-1].my_icon
+            last_page, last_icons = self.history[-1]
+            icon = last_page.my_icon
             if icon is not None:
                 icon.build()
             else:
@@ -125,7 +126,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         else:
             icon = self.home_icon
         self.iconbar.set_previous(icon)
-        for icon in self.current_page.icons:
+        if icons is None:
+            icons = self.current_page.icons
+        for icon in icons:
             if isinstance(icon, touchwizard.IconRef):
                 icon = icon.get_icon()
             icon.build()
@@ -137,12 +140,13 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         logger.info('Page %r requested.', name)
         self.current_page.panel.hide()
         self.current_page.panel.unparent()
-        self.history.append(self.current_page)
+        icon_states = self.iconbar.get_icon_states()
+        self.history.append((self.current_page, icon_states))
         new_page = self.available_pages[name]
         self.display_page(new_page)
     
     def evt_previous_page(self, event):
-        previous = self.history.pop()
+        previous, icons = self.history.pop()
         if previous is None:
             self.evt_request_quit(event)
             return
@@ -150,7 +154,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.current_page.panel.hide()
         self.current_page.panel.unparent()
         self.current_page.panel.destroy()
-        self.display_page(previous)
+        self.display_page(previous, icons)
     
     def evt_request_quit(self, event):
         logger.info('Quit requested.')
