@@ -4,6 +4,7 @@ import clutter
 import easyevent
 import logging
 import os
+from icon import IconRef
 
 logger = logging.getLogger('touchwizard')
 
@@ -69,6 +70,13 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
         icon.set_parent(self)
         self._icons.insert(index, icon)
         logger.debug('Inserting icon %r at position %s.', icon.name, index)
+    
+    def get_icon_states(self):
+        icons = list()
+        for icon in self._icons:
+            ref = IconRef(icon, icon.label_text, icon.is_locked, icon.is_on)
+            icons.append(ref)
+        return icons
     
     def clear(self):
         for icon in self._all_icons:
