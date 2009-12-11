@@ -14,12 +14,19 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
         
-        self.info_label = StretchText()
+       # self.info_label = StretchText()
+        self.info_label = clutter.Text()
         self.info_label.set_text('Hello World!')
         self.info_label.set_parent(self)
         
         self.register_event('info_message')
-    
+        self.register_event('set_infobar_editable')
+        
+    def evt_set_infobar_editable(self,event):
+        self.info_label.set_editable(True)
+        self.info_label.set_cursor_visible(True)
+        clutter.Stage().set_key_focus(self.info_label)
+   
     def evt_info_message(self, event):
         self.info_label.set_text(event.content)
     

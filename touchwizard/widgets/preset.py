@@ -12,18 +12,21 @@ import operator
 import gobject
 import clutter
 import candies2
+import easyevent
 
-class Preset(clutter.Actor, clutter.Container):
+class Preset(clutter.Actor, clutter.Container, easyevent.User):
     '''
     Preset class
     '''
     __gtype_name__ = 'Preset'
     
-    def __init__(self,label,img):
+    def __init__(self,label,img,name):
         clutter.Actor.__init__(self)
+        easyevent.User.__init__(self)
+        self.name=name
         self.preset_image = img
         self.preset_image.set_parent(self)
-        self.register = clutter.Texture( 'register.png') 
+        self.register = clutter.Texture('/images/save.png') 
         self.register.set_parent(self)
         self.register.set_reactive(True)
         self.register.connect('button-press-event', self.on_button_register_press)
@@ -32,8 +35,13 @@ class Preset(clutter.Actor, clutter.Container):
         self.preset_name.set_reactive(True)
         self.preset_name.connect('button-press-event', self.on_preset_name_press) 
         self.preset_name.connect('button-release-event',self.on_preset_name_release)          
+        self.register_event('preset_image')
+        self.border=clutter.Rectangle()
     
     def on_button_register_press(self, source, event) :
+        self.launch_event('save_preset',self.name)
+    
+    def evt_preset_image(self, event):
         pass
     
     def on_preset_name_press(self, source, event) :
@@ -89,19 +97,19 @@ if __name__ == '__main__':
     stage.connect('destroy',clutter.main_quit)
     
     label_preset_name1= "ceci n\'est pas un nom de preset"
-    image1 = clutter.Texture( 'test.jpg') 
-    preset_box1 = Preset(label_preset_name1,image1)
+    image1 = clutter.Texture( 'preset1.jpg') 
+    preset_box1 = Preset(label_preset_name1,image1,'preset1')
     preset_box1.set_size(240,180)
     preset_box1.set_position(20,50)
     stage.add(preset_box1)
 
     label_preset_name2= "preset 2"
-    image2 = clutter.Texture( 'test2.jpg') 
-    preset_box2 = Preset(label_preset_name2,image2)
+    image2 = clutter.Texture( 'preset2.jpg') 
+    preset_box2 = Preset(label_preset_name2,image2,'preset2')
     preset_box2.set_size(160,120)
     preset_box2.set_position(230,50)
     stage.add(preset_box2)
 
     stage.show()
-
+    
     clutter.main() 
