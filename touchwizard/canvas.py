@@ -146,8 +146,10 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.display_page(new_page)
     
     def evt_previous_page(self, event):
-        previous, icons = self.history.pop()
-        if previous is None:
+        try:
+            previous, icons = self.history.pop()
+        except IndexError:
+            #logger.error('Previous page requested but history is empty.')
             self.evt_request_quit(event)
             return
         logger.info('Back to %r page.', previous.name)
