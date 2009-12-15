@@ -43,6 +43,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.info_label = candies2.StretchText()
         self.info_label = clutter.Text()
 #        self.info_label.set_text('Hello World!')
+        if touchwizard.infobar_font:
+            self.info_label.set_font_name(touchwizard.infobar_font)
         self.info_label.set_parent(self)
         
         self.register_event('info_message')

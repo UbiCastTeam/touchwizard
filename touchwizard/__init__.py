@@ -10,6 +10,7 @@ page_path = None
 icon_path = None
 canvas_bg = None
 infobar_bg = None
+infobar_font = None
 iconbar_bg = None
 
 # Prodjpc
