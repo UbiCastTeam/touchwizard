@@ -73,9 +73,13 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
     
     def get_icon_states(self):
         icons = list()
-        for icon in self._icons:
+        if self._previous is None:
+            icons.append(None)
+        for icon in self._all_icons:
             ref = IconRef(icon, icon.label_text, icon.is_locked, icon.is_on)
             icons.append(ref)
+        if self._next is None:
+            icons.append(None)
         return icons
     
     def clear(self):

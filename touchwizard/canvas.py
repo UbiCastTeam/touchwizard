@@ -62,13 +62,14 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.iconbar = touchwizard.IconBar()
         self.iconbar.set_parent(self)
         
-        self.home_icon = touchwizard.Icon('home')
+        self.home_icon = touchwizard.Icon('shutdown')
         self.home_icon.build()
-        easyevent.forward_event('icon_home_actioned', 'request_quit')
+        easyevent.forward_event('icon_shutdown_actioned', 'request_quit')
         
         self.previous_icon = touchwizard.Icon('previous')
         self.previous_icon.build()
         easyevent.forward_event('icon_previous_actioned', 'previous_page')
+        easyevent.forward_event('icon_home_actioned', 'previous_page')
         
         self.history = list()
         self.first_page = first_page
@@ -108,7 +109,6 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         #print self.available_pages
     
     def display_page(self, page, icons=None):
-        import touchwizard
         if isinstance(page, type):
             self.current_page = page()
             if self.current_page.reuse:
@@ -120,27 +120,52 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             logger.info('Reusing already instanciated page %s from cache.',
                                                         self.current_page.name)
             self.current_page = page
+        self._build_iconbar(icons)
         self.current_page.panel.set_parent(self)
         self.current_page.panel.lower_bottom()
+        self.current_page.panel.show()
+    
+    def _build_iconbar(self, icons):
+        import touchwizard
         self.iconbar.clear()
-        if self.history:
-            last_page, last_icons = self.history[-1]
-            icon = last_page.my_icon
-            if icon is not None:
-                icon.build()
-            else:
-                icon = self.previous_icon
+        if icons is not None:
+            # cached icons
+            previous_icon = icons[0]
+            next_icon = icons[-1]
+            icons = icons[1:-1]
         else:
-            icon = self.home_icon
-        self.iconbar.set_previous(icon)
-        if icons is None:
+            # uninstanciated icons
             icons = self.current_page.icons
+            previous_icon = self.current_page.previous
+            next_icon = self.current_page.next
+        
+        # Icon "previous"
+        if previous_icon is None:
+            if self.history:
+                last_page, last_icons = self.history[-1]
+                previous_icon = last_page.my_icon
+                if previous_icon is None:
+                    previous_icon = self.previous_icon
+            else:
+                previous_icon = self.home_icon
+        if isinstance(previous_icon, touchwizard.IconRef):
+            previous_icon = previous_icon.get_icon()
+        previous_icon.build()
+        self.iconbar.set_previous(previous_icon)
+        
+        # Icon "next"
+        if next_icon is not None:
+            if isinstance(next_icon, touchwizard.IconRef):
+                next_icon = next_icon.get_icon()
+            next_icon.build()
+            self.iconbar.set_next(next_icon)
+        
+        # Other icons
         for icon in icons:
             if isinstance(icon, touchwizard.IconRef):
                 icon = icon.get_icon()
             icon.build()
             self.iconbar.append(icon)
-        self.current_page.panel.show()
     
     def evt_next_page(self, event):
         name = event.content

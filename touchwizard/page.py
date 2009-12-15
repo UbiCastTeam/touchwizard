@@ -37,6 +37,8 @@ class Page(object):
     title = None
     name = None
     panel = None
+    previous = None
+    next = None
     icons = ()
     
     def __init__(self):
