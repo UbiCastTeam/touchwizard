@@ -113,6 +113,10 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.label = candies2.StretchText()
         self.label.set_font_name('Sans 16')
         self.label.set_parent(self)
+        try:
+            self.label_text = _(self.label_text)
+        except NameError:
+            pass
         self.label.set_text(self.label_text)
         
         #self.back = clutter.Rectangle()
