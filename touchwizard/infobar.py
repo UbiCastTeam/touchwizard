@@ -42,16 +42,36 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         
         self.info_label = candies2.StretchText()
         self.info_label = clutter.Text()
-        #self.info_label.set_text('Hello World!')
+#        self.info_label.set_text('Hello World!')
         self.info_label.set_parent(self)
         
         self.register_event('info_message')
         self.register_event('set_infobar_editable')
+        self.register_event('info_bar_get_cursor_position')
+        self.register_event('info_bar_left')
+        self.register_event('info_bar_right')
+
+    def evt_info_bar_right(self,event):
+        cursor_pos=self.info_label.get_cursor_position()
+        cursor_res =cursor_pos+1
+        self.info_label.set_selection(cursor_res, cursor_res)
+        
+    def evt_info_bar_left(self,event):
+        cursor_pos=self.info_label.get_cursor_position()
+        if cursor_pos == -1:
+          cursor_pos = len(self.info_label.get_text())
+        cursor_res = cursor_pos - 1
+        self.info_label.set_selection(cursor_res, cursor_res)
+        
+    def evt_info_bar_get_cursor_position(self,event):
+        cursor_pos=self.info_label.get_cursor_position()
+        self.launch_event('info_bar_cursor_position',cursor_pos)
         
     def evt_set_infobar_editable(self,event):
         self.info_label.set_editable(True)
         self.info_label.set_cursor_visible(True)
         clutter.Stage().set_key_focus(self.info_label)
+        self.info_label.set_cursor_visible(True)
    
     def evt_info_message(self, event):
         self.info_label.set_text(event.content)
