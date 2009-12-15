@@ -111,7 +111,14 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         import touchwizard
         if isinstance(page, type):
             self.current_page = page()
+            if self.current_page.reuse:
+                logger.info('Storing reusable page %s in cache.',
+                                                        self.current_page.name)
+                self.available_pages[self.current_page.name] = \
+                                                              self.current_page
         else:
+            logger.info('Reusing already instanciated page %s from cache.',
+                                                        self.current_page.name)
             self.current_page = page
         self.current_page.panel.set_parent(self)
         self.current_page.panel.lower_bottom()
@@ -155,7 +162,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         logger.info('Back to %r page.', previous.name)
         self.current_page.panel.hide()
         self.current_page.panel.unparent()
-        self.current_page.panel.destroy()
+        if not self.current_page.reuse:
+            self.current_page.panel.destroy()
         self.display_page(previous, icons)
     
     def evt_request_quit(self, event):
@@ -169,6 +177,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     def evt_update_session(self, event):
         self.session.update(event)
         self.launch_event('dispatch_session', self.session)
+    
+    def do_remove(self, actor):
+        logger.info.debug('Panel "%s" removed.', actor.__name__)
     
     def do_get_preferred_width(self, for_height):
         import touchwizard

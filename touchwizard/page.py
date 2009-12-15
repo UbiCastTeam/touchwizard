@@ -32,6 +32,7 @@ class Page(object):
     """
     provides = tuple()
     requires = tuple()
+    reuse = False
     my_icon = None
     title = None
     name = None
