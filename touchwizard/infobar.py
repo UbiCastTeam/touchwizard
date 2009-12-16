@@ -71,6 +71,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.register_event('info_bar_get_cursor_position')
         self.register_event('info_bar_left')
         self.register_event('info_bar_right')
+        self.register_event('get_info_bar_text')
 
     @property
     def stage(self):
@@ -81,6 +82,9 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
             actor = actor.get_parent()
         self.__stage = actor
         return actor
+
+    def evt_get_info_bar_text(self,event):
+        self.launch_event('info_bar_text',self.editable_label.get_text())
 
     def evt_info_bar_right(self,event):
         cursor_pos=self.editable_label.get_cursor_position()
