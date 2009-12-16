@@ -70,10 +70,9 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.launch_event('info_bar_cursor_position',cursor_pos)
         
     def evt_set_infobar_editable(self,event):
-        self.info_label.set_editable(True)
-        self.info_label.set_cursor_visible(True)
+        self.info_label.set_editable(event.content)
+        self.info_label.set_cursor_visible(event.content)
         clutter.Stage().set_key_focus(self.info_label)
-        self.info_label.set_cursor_visible(True)
    
     def evt_info_message(self, event):
         self.info_label.set_text(event.content)
