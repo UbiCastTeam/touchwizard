@@ -63,6 +63,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
                 self.editable_label.set_font_name(touchwizard.infobar_font)
         self.editable_label.set_editable(True)
         self.editable_label.set_cursor_visible(True)
+        self.editable_label.hide()
         self.editable_label.set_parent(self)
         
         self.register_event('info_message')
