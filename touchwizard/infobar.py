@@ -103,6 +103,9 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.launch_event('info_bar_cursor_position',cursor_pos)
         
     def evt_set_infobar_editable(self,event):
+        #cursor_res=len(editable_label.get_text())
+        #print cursor_res
+        self.editable_label.set_selection(-1,-1)
         prefix = ''
         if not event.content:
             prefix = 'not '
