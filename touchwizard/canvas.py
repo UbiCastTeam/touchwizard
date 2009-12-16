@@ -65,11 +65,12 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.home_icon = touchwizard.Icon('shutdown')
         self.home_icon.build()
         easyevent.forward_event('icon_shutdown_actioned', 'request_quit')
+        easyevent.forward_event('icon_home_actioned', 'request_quit')
         
         self.previous_icon = touchwizard.Icon('previous')
         self.previous_icon.build()
         easyevent.forward_event('icon_previous_actioned', 'previous_page')
-        easyevent.forward_event('icon_home_actioned', 'previous_page')
+        
         
         self.history = list()
         self.first_page = first_page
