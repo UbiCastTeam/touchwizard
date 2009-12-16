@@ -43,4 +43,3 @@ class Page(object):
     
     def __init__(self):
         self.panel = self.__class__.panel()
-        self.panel.show()
