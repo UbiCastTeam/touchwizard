@@ -96,7 +96,13 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         pages = list()
         for f in os.listdir(path):
             if f.endswith('.py') and f != os.path.basename(origin):
-                module = imp.load_source(f[:-3], os.path.join(path, f))
+                try:
+                    module = imp.load_source(f[:-3], os.path.join(path, f))
+                except:
+                    import traceback
+                    logger.error('Cannot import page %s:\n%s',
+                                                f[:-3], traceback.format_exc())
+                    continue
                 for attr_name in dir(module):
                     if attr_name.startswith('__'):
                         continue
