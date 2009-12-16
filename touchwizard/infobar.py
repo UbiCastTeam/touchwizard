@@ -4,6 +4,7 @@ import clutter
 import easyevent
 import logging
 import candies2
+import pango
 import os
 
 logger = logging.getLogger('touchwizard')
@@ -23,6 +24,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     Launch no event.
     """
     __gtype_name__ = 'InfoBar'
+    locations = ('top-left', 'top-right', 'bottom-left', 'bottom-right')
+    styles = dict(normal='Black', reverted='White', error='Red')
     
     def __init__(self):
         import touchwizard
@@ -40,12 +43,19 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
                                                         touchwizard.infobar_bg)
         self.background.set_parent(self)
         
-        self.info_label = candies2.StretchText()
-        self.info_label = clutter.Text()
-#        self.info_label.set_text('Hello World!')
+        self.labels = dict()
+        for location in self.locations:
+            #label = candies2.StretchText()
+            label = clutter.Text()
+            if touchwizard.infobar_font:
+                label.set_font_name(touchwizard.infobar_font)
+            label.set_parent(self)
+            self.labels[location] = label
+        
+        self.ellipsis = clutter.Text()
+        self.ellipsis.set_text('...')
         if touchwizard.infobar_font:
-            self.info_label.set_font_name(touchwizard.infobar_font)
-        self.info_label.set_parent(self)
+            self.ellipsis.set_font_name(touchwizard.infobar_font)
         
         self.register_event('info_message')
         self.register_event('set_infobar_editable')
@@ -75,17 +85,57 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         clutter.Stage().set_key_focus(self.info_label)
    
     def evt_info_message(self, event):
-        self.info_label.set_text(event.content)
+        if not isinstance(event.content, dict):
+            event.content = dict(text=event.content)
+        
+        new_text = event.content.get('text')
+        style = event.content.get('style')
+        location = event.content.get('location', self.locations[0])
+        
+        if style is None:
+            if location.startswith('bottom'):
+                style = 'reverted'
+            else:
+                style = 'normal'
+        
+        label = self.labels[location]
+        label.set_color(self.styles[style])
+        if new_text is not None:
+            label.set_text(new_text)
+    
+    def evt_clear_infobar(self, event):
+        for label in self.labels:
+            label.set_text('')
     
     def do_get_preferred_width(self, for_height):
-        return self.info_label.get_preferred_width(for_height)
+        tl_min, tl_nat = \
+                        self.labels['top-left'].get_preferred_width(for_height)
+        tr_min, tr_nat = \
+                       self.labels['top-right'].get_preferred_width(for_height)
+        bl_min, bl_nat = \
+                     self.labels['bottom-left'].get_preferred_width(for_height)
+        br_min, br_nat = \
+                    self.labels['bottom-right'].get_preferred_width(for_height)
+        min = max(tl_min + tr_min, bl_min, br_min)
+        nat = max(tl_nat + tr_nat, bl_nat, br_nat)
+        if isinstance(self.background, clutter.Texture):
+            nat = self.background.get_preferred_width(for_height)[1]
+        return min, nat
     
     def do_get_preferred_height(self, for_width):
-        min_height, nat_height = \
-                           self.info_label.get_preferred_height(for_width - 10)
+        tl_min, tl_nat = \
+                        self.labels['top-left'].get_preferred_height(for_width)
+        tr_min, tr_nat = \
+                       self.labels['top-right'].get_preferred_height(for_width)
+        bl_min, bl_nat = \
+                     self.labels['bottom-left'].get_preferred_height(for_width)
+        br_min, br_nat = \
+                    self.labels['bottom-right'].get_preferred_height(for_width)
+        min = max(tl_min + bl_min, tr_min, br_min)
+        nat = max(tl_nat + bl_nat, tr_nat, br_nat)
         if isinstance(self.background, clutter.Texture):
-            nat_height = self.background.get_preferred_height(for_width)[1]
-        return min_height, nat_height
+            nat = self.background.get_preferred_height(for_width)[1]
+        return min, nat
     
     def do_allocate(self, box, flags):
         bar_width = box.x2 - box.x1
@@ -94,63 +144,76 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         bgbox = clutter.ActorBox(0, 0, bar_width, bar_height)
         self.background.allocate(bgbox, flags)
         
-        label_height = bar_height
-        if '\n' not in self.info_label.get_text():
-            label_height = bar_height / 2
-        lbox = clutter.ActorBox(5, 0, bar_width - 10, label_height)
-        self.info_label.allocate(lbox, flags)
+        available_height = bar_height / 2
+        ellipsis_width = self.ellipsis.get_preferred_width(-1)[1]
+        
+        label = self.labels['top-left']
+        label_width, label_height = label.get_preferred_size()[2:]
+        if label_width > bar_width - ellipsis_width - 10:
+            label.set_ellipsize(pango.ELLIPSIZE_END)
+            label_width = (bar_width - 10) / 2
+        else:
+            label.set_ellipsize(pango.ELLIPSIZE_NONE)
+        tlbox = clutter.ActorBox()
+        tlbox.x1 = 5
+        tlbox.y1 = (available_height - label_height) / 2
+        tlbox.x2 = tlbox.x1 + label_width
+        tlbox.y2 = tlbox.y1 + label_height
+        label.allocate(tlbox, flags)
+        
+        label = self.labels['top-right']
+        label_width, label_height = label.get_preferred_size()[2:]
+        if label_width > bar_width - tlbox.x2 - 5:
+            label.set_ellipsize(pango.ELLIPSIZE_END)
+            label_width = bar_width - tlbox.x2 - 5
+        else:
+            label.set_ellipsize(pango.ELLIPSIZE_NONE)
+        trbox = clutter.ActorBox()
+        trbox.x2 = bar_width - 5
+        trbox.x1 = trbox.x2 - label_width
+        trbox.y1 = (available_height - label_height) / 2
+        trbox.y2 = trbox.y1 + label_height
+        label.allocate(trbox, flags)
+        
+        label = self.labels['bottom-left']
+        label_width, label_height = label.get_preferred_size()[2:]
+        if label_width > bar_width - ellipsis_width - 10:
+            label.set_ellipsize(pango.ELLIPSIZE_END)
+            label_width = (bar_width - 10) / 2
+        else:
+            label.set_ellipsize(pango.ELLIPSIZE_NONE)
+        blbox = clutter.ActorBox()
+        blbox.x1 = 5
+        blbox.y1 = available_height + (available_height - label_height) / 2
+        blbox.x2 = blbox.x1 + label_width
+        blbox.y2 = blbox.y1 + label_height
+        label.allocate(blbox, flags)
+        
+        label = self.labels['bottom-right']
+        label_width, label_height = label.get_preferred_size()[2:]
+        if label_width > bar_width - blbox.x2 - 5:
+            label.set_ellipsize(pango.ELLIPSIZE_END)
+            label_width = bar_width - blbox.x2 - 5
+        else:
+            label.set_ellipsize(pango.ELLIPSIZE_NONE)
+        brbox = clutter.ActorBox()
+        brbox.x2 = bar_width - 5
+        brbox.x1 = brbox.x2 - label_width
+        brbox.y1 = available_height + (available_height - label_height) / 2
+        brbox.y2 = brbox.y1 + label_height
+        label.allocate(brbox, flags)
         
         clutter.Actor.do_allocate(self, box, flags)
     
     def do_foreach(self, func, data=None):
-        children = [self.background, self.info_label,]
+        children = (self.background,) + tuple(self.labels.values())
         for child in children:
             func(child, data)
     
     def do_paint(self):
-        children = [self.background, self.info_label,]
+        children = (self.background,) + tuple(self.labels.values())
         for child in children:
             child.paint()
     
-    def do_pick(self, color):
-        self.do_paint()
-
-
-if __name__ == '__main__':
-    import sys
-    logging.basicConfig(level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s %(message)s',
-        stream=sys.stderr)
-    
-    stage = clutter.Stage()
-    stage.set_title('Infobar test')
-    stage.connect('destroy', clutter.main_quit)
-    
-    def add_bar(y, height):
-        rect = clutter.Rectangle()
-        rect.set_color(clutter.color_from_string('LightBlue'))
-        rect.set_y(y)
-        rect.set_size(stage.get_width(), height)
-        
-        bar = InfoBar()
-        bar.props.request_mode = clutter.REQUEST_WIDTH_FOR_HEIGHT
-        bar.set_y(y)
-        bar.set_size(stage.get_width(), height)
-        
-        stage.add(rect, bar)
-    
-    add_bar(0, 25)
-    add_bar(50 ,50)
-    add_bar(125, 100)
-    
-    stage.show()
-    
-    import gobject
-    class InfoSender(easyevent.Launcher):
-        def send_info(self, text):
-            self.launch_event('info_message', text)
-    info_sender = InfoSender()
-    gobject.timeout_add(3000, info_sender.send_info, 'Goodbye cruel world...')
-    gobject.timeout_add(6000, info_sender.send_info, '...')
-    gobject.timeout_add(9000, info_sender.send_info, '')
-    clutter.main()
+    #def do_pick(self, color):
+    #    self.do_paint()
