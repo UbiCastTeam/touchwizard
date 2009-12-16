@@ -278,11 +278,14 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
 
 
 def quick_launch(page):
-    import sys
-    logging.basicConfig(level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s %(message)s',
-        stream=sys.stderr)
+    if not logging._handlers:
+        # Install a default log handler if none set
+        import sys
+        logging.basicConfig(level=logging.DEBUG,
+            format='%(asctime)s %(levelname)s %(message)s',
+            stream=sys.stderr)
     
+    logger.info('Initializing touchwizard app.')
     import touchwizard
     stage = clutter.Stage()
     stage.set_size(touchwizard.canvas_width, touchwizard.canvas_height)
@@ -303,6 +306,7 @@ def quick_launch(page):
             clutter.main_quit()
     Quitter()
 
+    logger.info('Running Clutter main loop.')
     clutter.main()
 
 
