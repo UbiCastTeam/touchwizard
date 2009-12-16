@@ -123,9 +123,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
                 self.available_pages[self.current_page.name] = \
                                                               self.current_page
         else:
+            self.current_page = page
             logger.info('Reusing already instanciated page %s from cache.',
                                                         self.current_page.name)
-            self.current_page = page
         self._build_iconbar(icons)
         self.current_page.panel.set_parent(self)
         self.current_page.panel.lower_bottom()
