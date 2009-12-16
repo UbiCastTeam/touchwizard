@@ -253,7 +253,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
                 self.lock_for(self.cooldown_ms)
                 self.launch_event(self.event_type)
             else:
-                self.launch_event('info',
+                self.launch_event('info_message',
                                'Please wait %d seconds' %(self.cooldown_ms / 1000))
     
     def animate(self):
