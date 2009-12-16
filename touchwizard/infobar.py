@@ -42,6 +42,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
                 logger.error('InfoBar background %s not found.',
                                                         touchwizard.infobar_bg)
         self.background.set_parent(self)
+        self.__stage = None
         
         self.labels = dict()
         for location in self.locations:
@@ -57,34 +58,66 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         if touchwizard.infobar_font:
             self.ellipsis.set_font_name(touchwizard.infobar_font)
         
+        self.editable_label = clutter.Text()
+        if touchwizard.infobar_font:
+                self.editable_label.set_font_name(touchwizard.infobar_font)
+        self.editable_label.set_editable(True)
+        self.editable_label.set_cursor_visible(True)
+        self.editable_label.set_parent(self)
+        
         self.register_event('info_message')
         self.register_event('set_infobar_editable')
         self.register_event('info_bar_get_cursor_position')
         self.register_event('info_bar_left')
         self.register_event('info_bar_right')
 
+    @property
+    def stage(self):
+        if self.__stage is not None:
+            return self.__stage
+        actor = self
+        while actor.get_parent() is not None:
+            actor = actor.get_parent()
+        self.__stage = actor
+        return actor
+
     def evt_info_bar_right(self,event):
-        cursor_pos=self.info_label.get_cursor_position()
+        cursor_pos=self.editable_label.get_cursor_position()
         cursor_res =cursor_pos+1
-        self.info_label.set_selection(cursor_res, cursor_res)
+        self.editable_label.set_selection(cursor_res, cursor_res)
         
     def evt_info_bar_left(self,event):
-        cursor_pos=self.info_label.get_cursor_position()
+        cursor_pos=self.editable_label.get_cursor_position()
         if cursor_pos == -1:
-          cursor_pos = len(self.info_label.get_text())
+          cursor_pos = len(self.editable_label.get_text())
         cursor_res = cursor_pos - 1
-        self.info_label.set_selection(cursor_res, cursor_res)
+        self.editable_label.set_selection(cursor_res, cursor_res)
         
     def evt_info_bar_get_cursor_position(self,event):
-        cursor_pos=self.info_label.get_cursor_position()
+        cursor_pos=self.editable_label.get_cursor_position()
         self.launch_event('info_bar_cursor_position',cursor_pos)
         
     def evt_set_infobar_editable(self,event):
-        self.info_label.set_editable(event.content)
-        self.info_label.set_cursor_visible(event.content)
-        clutter.Stage().set_key_focus(self.info_label)
+        prefix = ''
+        if not event.content:
+            prefix = 'not '
+        logger.info('Setting info bar %seditable.', prefix)
+        if event.content:
+            self.stage.set_key_focus(self.editable_label)
+            for label in self.labels.values():
+                label.hide()
+            self.editable_label.show()
+        else:
+            self.stage.set_key_focus(None)
+            for label in self.labels.values():
+                label.show()
+            self.editable_label.hide()
    
     def evt_info_message(self, event):
+        logger.debug('Info message: %s', event.content)
+        if self.editable_label.props.visible:
+            self.editable_label.set_text(event.content)
+            return
         if not isinstance(event.content, dict):
             event.content = dict(text=event.content)
         
@@ -203,15 +236,20 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         brbox.y2 = brbox.y1 + label_height
         label.allocate(brbox, flags)
         
+        ebox = clutter.ActorBox(5, 0, bar_width - 5, bar_height)
+        self.editable_label.allocate(ebox, flags)
+        
         clutter.Actor.do_allocate(self, box, flags)
     
     def do_foreach(self, func, data=None):
-        children = (self.background,) + tuple(self.labels.values())
+        children = (self.background, self.editable_label) \
+                                                  + tuple(self.labels.values())
         for child in children:
             func(child, data)
     
     def do_paint(self):
-        children = (self.background,) + tuple(self.labels.values())
+        children = (self.background, self.editable_label) \
+                                                  + tuple(self.labels.values())
         for child in children:
             child.paint()
     
