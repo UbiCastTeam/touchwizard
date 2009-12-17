@@ -68,10 +68,9 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         
         self.register_event('info_message')
         self.register_event('set_infobar_editable')
-        self.register_event('info_bar_get_cursor_position')
-        self.register_event('info_bar_left')
-        self.register_event('info_bar_right')
-        self.register_event('get_info_bar_text')
+        self.register_event('request_infobar_editable')
+        self.register_event('info_bar_get_cursor_position', 'get_info_bar_text')#deprecated
+        self.register_event('info_bar_left', 'info_bar_right')#deprecated
 
     @property
     def stage(self):
@@ -83,15 +82,21 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.__stage = actor
         return actor
 
+    def evt_request_infobar_editable(self, event):
+        self.launch_event('inforbar_editable_reply', self.editable_label)
+
     def evt_get_info_bar_text(self,event):
+        # deprecated method
         self.launch_event('info_bar_text',self.editable_label.get_text())
 
     def evt_info_bar_right(self,event):
+        # deprecated method
         cursor_pos=self.editable_label.get_cursor_position()
         cursor_res =cursor_pos+1
         self.editable_label.set_selection(cursor_res, cursor_res)
         
     def evt_info_bar_left(self,event):
+        # deprecated method
         cursor_pos=self.editable_label.get_cursor_position()
         if cursor_pos == -1:
           cursor_pos = len(self.editable_label.get_text())-1
@@ -99,22 +104,22 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.editable_label.set_selection(cursor_res, cursor_res)
         
     def evt_info_bar_get_cursor_position(self,event):
+        # deprecated method
         cursor_pos=self.editable_label.get_cursor_position()
         print cursor_pos
         self.launch_event('info_bar_cursor_position',cursor_pos)
         
     def evt_set_infobar_editable(self,event):
-        #cursor_res=len(editable_label.get_text())
-        #print cursor_res
         self.editable_label.set_selection(-1,-1)
         prefix = ''
-        if not event.content:
+        if event.content is False:
             prefix = 'not '
         logger.info('Setting info bar %seditable.', prefix)
         if event.content:
             self.stage.set_key_focus(self.editable_label)
             for label in self.labels.values():
                 label.hide()
+            self.editable_label.set_text('')
             self.editable_label.show()
         else:
             self.stage.set_key_focus(None)
@@ -125,7 +130,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     def evt_info_message(self, event):
         logger.debug('Info message: %s', event.content)
         if self.editable_label.props.visible:
-            self.editable_label.set_text(event.content)
+            self.editable_label.set_text(event.content)#deprecated
             return
         if not isinstance(event.content, dict):
             event.content = dict(text=event.content)
