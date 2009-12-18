@@ -246,9 +246,8 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         if event is not None and event.content is not None:
             what_to_do = event.content
         if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY):
-            if not self.is_locked:
-                self.toggle()
-                self.animate()
+            self.toggle()
+            self.animate()
         if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_OPERATE_ONLY):
             if not self.is_locked:
                 self.lock_for(self.cooldown_ms)
@@ -273,6 +272,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         logger.debug('Locking %s.', self.name)
         self.is_locked = True
         self.picture.set_opacity(80)
+        self.set_reactive(False)
         return True
 
     def lock_for(self, duration):
@@ -282,6 +282,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     def unlock(self):
         logger.debug('Unlocking %s.', self.name)
         self.is_locked = False
+        self.set_reactive(True)
         self.picture.set_opacity(255)
         return False
 
