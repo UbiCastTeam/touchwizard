@@ -266,13 +266,14 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             picture_path = self.picture_off
             if self.is_on:
                 picture_path = self.picture_on
+            logger.info("toggle request, %s" %picture_path)
             self.picture.set_from_file(picture_path)
     
     def lock(self):
         logger.debug('Locking %s.', self.name)
         self.is_locked = True
         self.picture.set_opacity(80)
-        self.set_reactive(False)
+        self.picture.set_reactive(False)
         return True
 
     def lock_for(self, duration):
@@ -282,7 +283,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     def unlock(self):
         logger.debug('Unlocking %s.', self.name)
         self.is_locked = False
-        self.set_reactive(True)
+        self.picture.set_reactive(True)
         self.picture.set_opacity(255)
         return False
 
