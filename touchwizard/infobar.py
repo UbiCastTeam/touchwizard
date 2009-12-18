@@ -69,6 +69,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.register_event('info_message')
         self.register_event('set_infobar_editable')
         self.register_event('request_infobar_editable')
+        self.register_event('clear_infobar')
 
     @property
     def stage(self):
@@ -128,8 +129,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
 
     def evt_clear_infobar(self, event):
         for label in self.labels:
-            label.set_text('')
-
+            self.labels[label].set_text('')
+    
     def do_get_preferred_width(self, for_height):
         tl_min, tl_nat = \
                         self.labels['top-left'].get_preferred_width(for_height)
