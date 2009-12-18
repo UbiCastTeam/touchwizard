@@ -246,8 +246,9 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         if event is not None and event.content is not None:
             what_to_do = event.content
         if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY):
-            self.toggle()
-            self.animate()
+            if not self.is_locked:
+                self.toggle()
+                self.animate()
         if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_OPERATE_ONLY):
             if not self.is_locked:
                 self.lock_for(self.cooldown_ms)
