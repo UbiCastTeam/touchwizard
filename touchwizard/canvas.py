@@ -304,6 +304,8 @@ def quick_launch(page):
         def evt_wizard_quit(self, event):
             logging.info('Clutter quit.')
             clutter.main_quit()
+            import sys
+            gobject.timeout_add_seconds(2, sys.exit)
     Quitter()
 
     logger.info('Running Clutter main loop.')
