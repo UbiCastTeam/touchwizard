@@ -251,7 +251,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_OPERATE_ONLY):
             if not self.is_locked:
                 self.lock_for(self.cooldown_ms)
-                self.launch_event(self.event_type)
+                self.launch_event(self.event_type, self.is_on)
             else:
                 if self.cooldown_ms >= 1000:
                     self.launch_event('info_message',
