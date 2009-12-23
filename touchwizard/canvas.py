@@ -6,6 +6,7 @@ import easyevent
 import types
 import logging
 import os
+import pexpect
 
 logger = logging.getLogger('touchwizard')
 
@@ -199,6 +200,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.display_page(previous, icons)
     
     def evt_request_quit(self, event):
+        pexpect.run('cp ../../../easycast/system/touch/xorg_prod.conf /etc/X11/xorg.conf')
         logger.info('Quit requested.')
         self.launch_event('prepare_quit')
         self.launch_event('wizard_quit')
