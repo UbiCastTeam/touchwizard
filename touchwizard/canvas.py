@@ -278,7 +278,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.do_paint()
 
 
-def quick_launch(page):
+def quick_launch(page, width=None, height=None):
     if not logging._handlers:
         # Install a default log handler if none set
         import sys
@@ -289,7 +289,10 @@ def quick_launch(page):
     logger.info('Initializing touchwizard app.')
     import touchwizard
     stage = clutter.Stage()
-    stage.set_size(touchwizard.canvas_width, touchwizard.canvas_height)
+    if width == None and height == None:
+        width = touchwizard.canvas_width
+        height = touchwizard.canvas_height
+    stage.set_size(width, height)
     if page is not None:
         stage.set_title(page.title)
     stage.connect('destroy', clutter.main_quit)
