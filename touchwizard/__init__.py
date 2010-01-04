@@ -13,5 +13,5 @@ infobar_bg = None
 infobar_font = None
 iconbar_bg = None
 
-#canvas_width = 1280
-#canvas_height = 1024
+canvas_width = 1280
+canvas_height = 1024
