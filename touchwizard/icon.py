@@ -77,7 +77,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.event_type = self.actioned_event_type_pattern %(name)
         self.cooldown_ms = self.default_cooldown
         self.is_locked = False
-        self.is_on = None
+        self.is_on = False
         self.picture = None
         self.picture_on = None
         self.picture_off = None
