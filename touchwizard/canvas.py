@@ -292,6 +292,9 @@ def quick_launch(page, width=None, height=None):
     if width == None and height == None:
         width = touchwizard.canvas_width
         height = touchwizard.canvas_height
+    else:
+        touchwizard.canvas_width = width
+        touchwizard.canvas_height = height
     stage.set_size(width, height)
     if page is not None:
         stage.set_title(page.title)
