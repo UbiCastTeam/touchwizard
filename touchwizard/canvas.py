@@ -307,26 +307,35 @@ def quick_launch(page, width=None, height=None, overlay=None, main_loop_run_cb=N
         stage.add(overlay)
         overlay.show()
 
-    stage.connect('destroy', clutter.main_quit)
     stage.show()
 
+    main_loop_name = "External"
     if main_loop_run_cb is None:
         main_loop_run_cb = clutter.main
+        main_loop_name = "Clutter"
     if main_loop_stop_cb is None:
         main_loop_stop_cb = clutter.main_quit
+
+    def quit(*args):
+        logger.info("Quitting %s main loop by stage destroy" %main_loop_name)
+        main_loop_stop_cb()
+        import sys
+        gobject.timeout_add_seconds(2, sys.exit)
+
+    stage.connect('destroy', quit)
 
     class Quitter(easyevent.Listener):
         def __init__(self):
             easyevent.Listener.__init__(self)
             self.register_event('wizard_quit')
         def evt_wizard_quit(self, event):
-            logging.info('Clutter quit.')
+            logging.info('Quitting %s main loop by touchwizard button' %main_loop_name)
             main_loop_stop_cb() 
             import sys
             gobject.timeout_add_seconds(2, sys.exit)
     Quitter()
 
-    logger.info('Running Clutter main loop.')
+    logger.info('Running %s main loop.' %main_loop_name)
     main_loop_run_cb()
 
 if __name__ == '__main__':
