@@ -278,7 +278,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.do_paint()
 
 
-def quick_launch(page, width=None, height=None):
+def quick_launch(page, width=None, height=None, overlay=None):
     if not logging._handlers:
         # Install a default log handler if none set
         import sys
@@ -298,10 +298,16 @@ def quick_launch(page, width=None, height=None):
     stage.set_size(width, height)
     if page is not None:
         stage.set_title(page.title)
-    stage.connect('destroy', clutter.main_quit)
     
     canvas = Canvas(page)
     stage.add(canvas)
+
+    if overlay is not None:
+        logger.info("Adding overlay %s" %overlay)
+        stage.add(overlay)
+        overlay.show()
+
+    stage.connect('destroy', clutter.main_quit)
     stage.show()
     
     class Quitter(easyevent.Listener):
