@@ -278,7 +278,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.do_paint()
 
 
-def quick_launch(page, width=None, height=None, overlay=None):
+def quick_launch(page, width=None, height=None, overlay=None, main_loop_run_cb=None, main_loop_stop_cb=None):
     if not logging._handlers:
         # Install a default log handler if none set
         import sys
@@ -309,21 +309,25 @@ def quick_launch(page, width=None, height=None, overlay=None):
 
     stage.connect('destroy', clutter.main_quit)
     stage.show()
-    
+
+    if main_loop_run_cb is None:
+        main_loop_run_cb = clutter.main
+    if main_loop_stop_cb is None:
+        main_loop_stop_cb = clutter.main_quit
+
     class Quitter(easyevent.Listener):
         def __init__(self):
             easyevent.Listener.__init__(self)
             self.register_event('wizard_quit')
         def evt_wizard_quit(self, event):
             logging.info('Clutter quit.')
-            clutter.main_quit()
+            main_loop_stop_cb() 
             import sys
             gobject.timeout_add_seconds(2, sys.exit)
     Quitter()
 
     logger.info('Running Clutter main loop.')
-    clutter.main()
-
+    main_loop_run_cb()
 
 if __name__ == '__main__':
     quick_launch(None)
