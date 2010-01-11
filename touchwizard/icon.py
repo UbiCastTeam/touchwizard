@@ -243,10 +243,14 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     
     def action(self, event=None):
         what_to_do = self.ACTION_ANIMATE_AND_OPERATE
+        new_state = None
         if event is not None and event.content is not None:
             what_to_do = event.content
+            if isinstance(event.content, dict):
+                what_to_do = event.content["action"]
+                new_state = event.content["state"]
         if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY):
-            self.toggle()
+            self.toggle(new_state)
             self.animate()
         if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_OPERATE_ONLY):
             if not self.is_locked:
@@ -260,9 +264,13 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     def animate(self):
         self.timeline.start()
     
-    def toggle(self):
+    def toggle(self, new_state=None):
         if self.picture_on is not None and self.picture_off is not None:
-            self.is_on = not self.is_on
+            if new_state is None:
+                self.is_on = not self.is_on
+            else:
+                logger.info("New state is %s" %new_state)
+                self.is_on = new_state
             picture_path = self.picture_off
             if self.is_on:
                 picture_path = self.picture_on
