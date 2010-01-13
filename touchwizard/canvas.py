@@ -283,7 +283,7 @@ def quick_launch(page, width=None, height=None, overlay=None, main_loop_run_cb=N
         # Install a default log handler if none set
         import sys
         logging.basicConfig(level=logging.DEBUG,
-            format='%(asctime)s %(levelname)s %(message)s',
+            format='%(asctime)s  %(name)-12s %(levelname)s %(message)s',
             stream=sys.stderr)
     
     logger.info('Initializing touchwizard app.')
