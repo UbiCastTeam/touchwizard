@@ -17,11 +17,12 @@ class IconRef(object):
     Used for abstract page declarations.
     """
     
-    def __init__(self, icon, label=None, is_locked=None, is_on=False):
+    def __init__(self, icon, label=None, is_locked=None, is_on=False, condition=True):
         self.icon = icon
         self.label = label
         self.is_locked = is_locked
         self.is_on = is_on
+        self.condition = condition
     
     def get_icon(self):
         icon = Icon(self.icon.name, self.icon.label_text)

@@ -171,6 +171,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         # Other icons
         for icon in icons:
             if isinstance(icon, touchwizard.IconRef):
+                if not icon.condition:
+                    continue
                 icon = icon.get_icon()
             icon.build()
             self.iconbar.append(icon)
