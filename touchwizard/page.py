@@ -32,6 +32,7 @@ class Page(object):
     """
     provides = tuple()
     requires = tuple()
+    need_session = False
     reuse = False
     my_icon = None
     title = None
@@ -41,5 +42,8 @@ class Page(object):
     next = None
     icons = ()
     
-    def __init__(self):
-        self.panel = self.__class__.panel()
+    def __init__(self, session):
+        if self.need_session:
+            self.panel = self.__class__.panel(session=session)
+        else:
+            self.panel = self.__class__.panel()

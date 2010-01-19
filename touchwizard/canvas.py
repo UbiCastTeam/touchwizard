@@ -118,7 +118,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     
     def display_page(self, page, icons=None):
         if isinstance(page, type):
-            self.current_page = page()
+            self.current_page = page(self.session)
             if self.current_page.reuse:
                 logger.info('Storing reusable page %s in cache.',
                                                         self.current_page.name)
