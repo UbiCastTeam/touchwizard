@@ -25,7 +25,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     """
     __gtype_name__ = 'InfoBar'
     locations = ('top-left', 'top-right', 'bottom-left', 'bottom-right')
-    styles = dict(normal='Black', reverted='White', error='Red')
+    styles = dict(normal='White', reverted='Black', error='Red')
 
     def __init__(self):
         import touchwizard
