@@ -6,6 +6,7 @@ import logging
 import candies2
 import pango
 import os
+import gobject
 
 logger = logging.getLogger('touchwizard')
 
@@ -31,6 +32,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         import touchwizard
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
+
+        self.hide_id = None
 
         self.background = clutter.Rectangle()
         self.background.set_color(clutter.color_from_string('LightGray'))
@@ -107,6 +110,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
 #-----------------------------------------------------------
 
     def evt_info_message(self, event):
+        if self.hide_id  is not None:
+            gobject.source_remove(self.hide_id)
         logger.debug('Info message: %s', event.content)
         if self.editable_label.props.visible:
             return
@@ -116,6 +121,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         new_text = event.content.get('text')
         style = event.content.get('style')
         location = event.content.get('location', self.locations[0])
+        autoclear = event.content.get('autoclear', False)
+        autoclear_delay = event.content.get('autoclear_delay', 2000)
 
         if style is None:
             if location.startswith('bottom'):
@@ -127,10 +134,14 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         label.set_color(self.styles[style])
         if new_text is not None:
             label.set_text(new_text)
+            if autoclear:
+                self.hide_id = gobject.timeout_add(autoclear_delay, self.evt_clear_infobar)
 
-    def evt_clear_infobar(self, event):
+    def evt_clear_infobar(self, event=None):
         for label in self.labels:
             self.labels[label].set_text('')
+        self.hide_id = None
+        return False
     
     def do_get_preferred_width(self, for_height):
         tl_min, tl_nat = \
