@@ -64,6 +64,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.editable_label = clutter.Text()
         if touchwizard.infobar_font:
                 self.editable_label.set_font_name(touchwizard.infobar_font)
+        self.editable_label.set_color(self.styles['normal'])
         self.editable_label.set_editable(True)
         self.editable_label.set_cursor_visible(True)
         self.editable_label.hide()
