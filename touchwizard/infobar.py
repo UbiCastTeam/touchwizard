@@ -136,7 +136,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         if new_text is not None:
             label.set_text(new_text)
             if autoclear:
-                self.hide_id = gobject.timeout_add(autoclear_delay, self.evt_clear_infobar)
+                self.hide_id = gobject.timeout_add(autoclear_delay,
+                                                        self.evt_clear_infobar)
 
     def evt_clear_infobar(self, event=None):
         for label in self.labels:

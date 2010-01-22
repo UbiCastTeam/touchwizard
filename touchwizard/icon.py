@@ -17,7 +17,8 @@ class IconRef(object):
     Used for abstract page declarations.
     """
     
-    def __init__(self, icon, label=None, is_locked=None, is_on=False, condition=True):
+    def __init__(self, icon, label=None, is_locked=None, is_on=False,
+                                                               condition=True):
         self.icon = icon
         self.label = label
         self.is_locked = is_locked
@@ -131,10 +132,10 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     def _build_picture(self):
         import touchwizard
         icon_path = touchwizard.icon_path or ''
-        picture_path = os.path.join(icon_path, "%s.png" %(self.name))
+        picture_path = os.path.join(icon_path, '%s.png' %(self.name))
         
-        picture_on = os.path.join(icon_path, "%s_on.png" %(self.name))
-        picture_off = os.path.join(icon_path, "%s_off.png" %(self.name))
+        picture_on = os.path.join(icon_path, '%s_on.png' %(self.name))
+        picture_off = os.path.join(icon_path, '%s_off.png' %(self.name))
         if os.path.exists(picture_on):
             self.picture_on = picture_on
         if os.path.exists(picture_off):
@@ -248,12 +249,14 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         if event is not None and event.content is not None:
             what_to_do = event.content
             if isinstance(event.content, dict):
-                what_to_do = event.content["action"]
-                new_state = event.content["state"]
-        if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY):
+                what_to_do = event.content['action']
+                new_state = event.content['state']
+        actions = (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY)
+        if what_to_do in actions:
             self.toggle(new_state)
             self.animate()
-        if what_to_do in (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_OPERATE_ONLY):
+        actions = (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_OPERATE_ONLY)
+        if what_to_do in actions:
             if not self.is_locked:
                 self.lock_for(self.cooldown_ms)
                 self.launch_event(self.event_type, self.is_on)
@@ -270,12 +273,12 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             if new_state is None:
                 self.is_on = not self.is_on
             else:
-                logger.info("New state is %s" %new_state)
+                logger.info('New state is %s', new_state)
                 self.is_on = new_state
             picture_path = self.picture_off
             if self.is_on:
                 picture_path = self.picture_on
-            logger.info("toggle request, %s" %picture_path)
+            logger.info('toggle request, %s', picture_path)
             self.picture.set_from_file(picture_path)
     
     def lock(self):
