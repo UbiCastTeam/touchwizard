@@ -7,7 +7,7 @@ import easyevent
 import candies2
 import logging
 
-logger = logging.getLogger('icon')
+logger = logging.getLogger('touchwizard')
 
 class IconRef(object):
     """Abtract reference to an Icon instance. Avoid the need to instanciate
@@ -153,7 +153,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             self.picture = IconPicture(picture_path)
             self.picture.set_keep_aspect_ratio(True)
         else:
-            logger.error('Icon file %s does not exist.', picture_path)
+            logger.error('in icon: Icon file %s does not exist.', picture_path)
             self.picture = candies2.ClassicButton('no icon')
         
         candies2.SimpleClick(self.picture)
@@ -273,16 +273,16 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             if new_state is None:
                 self.is_on = not self.is_on
             else:
-                logger.info('New state is %s', new_state)
+                logger.debug('in icon: New state is %s', new_state)
                 self.is_on = new_state
             picture_path = self.picture_off
             if self.is_on:
                 picture_path = self.picture_on
-            logger.info('toggle request, %s', picture_path)
+            logger.debug('in icon: toggle request, %s', picture_path)
             self.picture.set_from_file(picture_path)
     
     def lock(self):
-        logger.debug('Locking %s.', self.name)
+        logger.debug('in icon: locking %s.', self.name)
         self.is_locked = True
         self.picture.set_opacity(80)
         self.picture.set_reactive(False)
@@ -293,7 +293,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         gobject.timeout_add(duration, self.unlock)
 
     def unlock(self):
-        logger.debug('Unlocking %s.', self.name)
+        logger.debug('in icon: unlocking %s.', self.name)
         self.is_locked = False
         self.picture.set_reactive(True)
         self.picture.set_opacity(255)
@@ -304,7 +304,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             operation = 'lock'
         else:
             operation = 'unlock'
-        logger.debug('Remote %s request received for %s.',
+        logger.debug('in icon: Remote %s request received for %s.',
                                                           operation, self.name)
         call_method = getattr(self, operation)
         call_method()
