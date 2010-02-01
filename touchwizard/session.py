@@ -3,7 +3,7 @@
 import easyevent
 import logging
 
-logger = logging.getLogger('touchwizard')
+logger = logging.getLogger('touchwizard.session')
 
 class Session(easyevent.User):
     """Session is a shared dictionnary-like object which notify when modified.
@@ -34,7 +34,7 @@ class Session(easyevent.User):
         self.register_event('request_session')
     
     def evt_request_session(self, event):
-        logger.debug('in session: Session requested by %s' %event.source)
+        logger.debug('Session requested by %s' %event.source)
         self.launch_event('session_reply', self)
     
     def __getattr__(self, name):
@@ -45,7 +45,7 @@ class Session(easyevent.User):
     
     def __decorate_by_notifier(self, method):
         def notify(*args, **kw):
-            logger.debug('in session: Session modified (%s)', method.__name__)
+            logger.debug('Session modified (%s)', method.__name__)
             result = method(*args, **kw)
             self.launch_event('session_update')
             return result
