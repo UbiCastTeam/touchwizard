@@ -93,7 +93,6 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     def evt_set_infobar_editable(self,event):
         self.editable_label.set_selection(-1,-1)
         prefix = ''
-        print '----------infobar-----------------'
         if event.content is False:
             prefix = 'not '
         logger.info('Setting info bar %seditable.', prefix)
