@@ -16,7 +16,8 @@ if __name__ == '__main__':
     stage.set_size(640, 480)
     stage.connect('destroy', clutter.main_quit)
 
-    green = touchwizard.Icon('green_button')
+    ref = touchwizard.IconRef(touchwizard.Icon('green_button'), cooldown=3000)
+    green = ref.get_icon()
     green.build()
 
     blue = touchwizard.Icon('blue_button')

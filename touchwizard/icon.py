@@ -18,11 +18,12 @@ class IconRef(object):
     """
     
     def __init__(self, icon, label=None, is_locked=None, is_on=False,
-                                                               condition=True):
+                                                cooldown=None, condition=True):
         self.icon = icon
         self.label = label
         self.is_locked = is_locked
         self.is_on = is_on
+        self.cooldown = cooldown
         self.condition = condition
     
     def get_icon(self):
@@ -33,6 +34,8 @@ class IconRef(object):
             icon.is_locked = self.is_locked
         if self.is_on is not None:
             icon.is_on = self.is_on
+        if self.cooldown is not None:
+            icon.cooldown_ms = self.cooldown
         return icon
 
 
