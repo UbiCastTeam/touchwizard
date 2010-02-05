@@ -160,6 +160,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         return min, nat
 
     def do_get_preferred_height(self, for_width):
+        import touchwizard
+        
         tl_min, tl_nat = \
                         self.labels['top-left'].get_preferred_height(for_width)
         tr_min, tr_nat = \
@@ -172,7 +174,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         nat = max(tl_nat + bl_nat, tr_nat, br_nat)
         if isinstance(self.background, clutter.Texture):
             nat = self.background.get_preferred_height(for_width)[1]
-        return min, nat
+        return min, nat * touchwizard.scaling_ratio
 
     def do_allocate(self, box, flags):
         bar_width = box.x2 - box.x1

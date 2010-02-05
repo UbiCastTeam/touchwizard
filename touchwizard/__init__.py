@@ -12,7 +12,7 @@ canvas_bg = None
 infobar_bg = None
 infobar_font = None
 iconbar_bg = None
-icon_ratio = 1.0
+scaling_ratio = 1.0
 
 canvas_width = 1280
 canvas_height = 1024

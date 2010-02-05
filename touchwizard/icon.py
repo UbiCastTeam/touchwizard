@@ -147,14 +147,12 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         is_on = None
         if os.path.exists(picture_path):
             self.picture = IconPicture(picture_path)
-            self.picture.set_keep_aspect_ratio(True)
         elif self.picture_on is not None and self.picture_off is not None:
             picture_path = self.picture_off
             is_on = self.is_on is True
             if self.is_on:
                 picture_path = self.picture_on
             self.picture = IconPicture(picture_path)
-            self.picture.set_keep_aspect_ratio(True)
         else:
             logger.error('in icon: Icon file %s does not exist.', picture_path)
             self.picture = candies2.ClassicButton('no icon')
@@ -333,9 +331,9 @@ class IconPicture(clutter.Texture):
     def do_get_preferred_width(self, for_height):
         import touchwizard
         min, nat = clutter.Texture.do_get_preferred_width(self, for_height)
-        return min * touchwizard.icon_ratio, nat * touchwizard.icon_ratio
+        return min * touchwizard.scaling_ratio, nat * touchwizard.scaling_ratio
     
     def do_get_preferred_height(self, for_width):
         import touchwizard
         min, nat = clutter.Texture.do_get_preferred_height(self, for_width)
-        return min * touchwizard.icon_ratio, nat * touchwizard.icon_ratio
+        return min * touchwizard.scaling_ratio, nat * touchwizard.scaling_ratio
