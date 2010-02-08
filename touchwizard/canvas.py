@@ -236,7 +236,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         canvas_width = box.x2 - box.x1
         canvas_height = box.y2 - box.y1
         
-        infobar_height = self.infobar.get_preferred_height(canvas_width)[1]
+        infobar_height = round(self.infobar.get_preferred_height(canvas_width)[1])
         infobar_box = clutter.ActorBox()
         infobar_box.x1 = 0
         infobar_box.y1 = 0
@@ -244,7 +244,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         infobar_box.y2 = infobar_height
         self.infobar.allocate(infobar_box, flags)
         
-        iconbar_height = self.iconbar.get_preferred_height(canvas_width)[1]
+        iconbar_height = round(self.iconbar.get_preferred_height(canvas_width)[1])
         iconbar_box = clutter.ActorBox()
         iconbar_box.x1 = 0
         iconbar_box.y1 = canvas_height - iconbar_height
