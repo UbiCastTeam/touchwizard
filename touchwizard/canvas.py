@@ -178,6 +178,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.iconbar.append(icon)
     
     def evt_next_page(self, event):
+        gobject.timeout_add(300, self.do_next_page, event)
+
+    def do_next_page(self, event):
         name = event.content
         logger.info('Page %r requested.', name)
         self.current_page.panel.hide()
@@ -188,6 +191,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.display_page(new_page)
     
     def evt_previous_page(self, event):
+        gobject.timeout_add(300, self.do_previous_page, event)
+
+    def do_previous_page(self, event):
         try:
             previous, icons = self.history.pop()
         except IndexError:
