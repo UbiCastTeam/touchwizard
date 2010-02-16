@@ -188,11 +188,13 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
 
         label = self.labels['top-left']
         label_width, label_height = label.get_preferred_size()[2:]
-        if label_width > bar_width - ellipsis_width - 10:
-            label.set_ellipsize(pango.ELLIPSIZE_END)
+        label.set_ellipsize(pango.ELLIPSIZE_END)
+        if label_width <= bar_width - ellipsis_width - 10:
+            label.set_ellipsize(pango.ELLIPSIZE_NONE)
+        elif self.labels['top-right'].get_text():
             label_width = (bar_width - 10) / 2
         else:
-            label.set_ellipsize(pango.ELLIPSIZE_NONE)
+            label_width = bar_width - 10
         tlbox = clutter.ActorBox()
         tlbox.x1 = 5
         tlbox.y1 = (available_height - label_height) / 2
