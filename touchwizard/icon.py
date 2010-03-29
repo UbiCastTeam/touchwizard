@@ -324,6 +324,9 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     
     def do_pick(self, color):
         self.do_paint()
+    
+    def do_destroy(self):
+        self.unregister_all_events()
 
 class IconPicture(clutter.Texture):
     __gtype_name__ = 'IconPicture'
