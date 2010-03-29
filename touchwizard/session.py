@@ -37,6 +37,12 @@ class Session(easyevent.User):
         logger.debug('Session requested by %s' %event.source)
         self.launch_event('session_reply', self)
     
+    def __cmp__(self, obj):
+        try:
+            self.dict.__cmp__(obj)
+        except TypeError:
+            return -1
+    
     def __getattr__(self, name):
         attr = self.dict.__getattribute__(name)
         if name in self.MODIFYING_METHOD_NAMES:
