@@ -1,1 +1,1 @@
-VERSION = '0.1~dboucard'
+VERSION = '0.2'
