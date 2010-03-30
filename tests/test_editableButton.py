@@ -4,7 +4,6 @@ import clutter
 import candies2
 import easyevent
 import touchwizard
-import config
 from widgets import EditableButton
 
 class TestPanel(candies2.Box, easyevent.User):
