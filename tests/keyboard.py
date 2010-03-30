@@ -6,8 +6,6 @@ import easyevent
 import clutter
 import gobject
 import candies2
-import config
-#common
 import common
 
 class KeyboardPanel(candies2.Keyboard, easyevent.User):
