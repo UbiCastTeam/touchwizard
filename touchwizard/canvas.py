@@ -68,8 +68,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         easyevent.forward_event('icon_shutdown_actioned', 'request_quit')
         easyevent.forward_event('icon_home_actioned', 'request_quit')
         
-        self.previous_icon = touchwizard.Icon('previous')
-        self.previous_icon.build()
+        self.previous_icon = touchwizard.IconRef(touchwizard.Icon('previous'))
+        #self.previous_icon.build()
         easyevent.forward_event('icon_previous_actioned', 'previous_page')
         
         
