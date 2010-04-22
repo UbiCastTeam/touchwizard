@@ -69,7 +69,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     ACTION_ANIMATE_AND_OPERATE, ACTION_ANIMATE_ONLY, ACTION_OPERATE_ONLY = \
                                                                        range(3)
     __gtype_name__ = 'Icon'
-    default_cooldown = 100
+    default_cooldown = 500
     actioned_event_type_pattern = 'icon_%s_actioned'
     lock_event_type_pattern = 'lock_icon_%s'
     action_event_type_pattern = 'action_icon_%s'
