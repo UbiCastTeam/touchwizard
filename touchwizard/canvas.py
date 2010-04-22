@@ -165,7 +165,6 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         if next_icon is not None:
             if isinstance(next_icon, touchwizard.IconRef):
                 next_icon = next_icon.get_icon()
-            next_icon.cooldown_ms = 1500
             next_icon.build()
             self.iconbar.set_next(next_icon)
         
