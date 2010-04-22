@@ -50,6 +50,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.session = touchwizard.Session()
         
         self.background = None
+        self.last_page_name = None
+
         if touchwizard.canvas_bg:
             if not os.path.exists(touchwizard.canvas_bg):
                 logger.error('Canvas background %s not found.',
@@ -178,8 +180,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.iconbar.append(icon)
     
     def evt_next_page(self, event):
-        self.unregister_event('next_page')
-        gobject.timeout_add(300, self.do_next_page, event)
+        if self.last_page_name is None or self.last_page_name != event.content:
+            gobject.timeout_add(300, self.do_next_page, event)
+            self.unregister_event('next_page')
 
     def do_next_page(self, event):
         name = event.content
@@ -190,7 +193,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.history.append((self.current_page, icon_states))
         new_page = self.available_pages[name]
         self.display_page(new_page)
-        gobject.timeout_add(1000, self.register_event, 'next_page')
+        self.register_event('next_page')
     
     def evt_previous_page(self, event):
         gobject.timeout_add(300, self.do_previous_page, event)
