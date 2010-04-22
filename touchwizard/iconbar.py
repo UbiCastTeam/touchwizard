@@ -76,7 +76,7 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
         if self._previous is None:
             icons.append(None)
         for icon in self._all_icons:
-            ref = IconRef(icon, icon.label_text, icon.is_locked, icon.is_on)
+            ref = IconRef(icon, icon.label_text, icon.is_locked, icon.is_on, icon.cooldown_ms)
             icons.append(ref)
         if self._next is None:
             icons.append(None)
