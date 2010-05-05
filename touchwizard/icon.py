@@ -107,14 +107,6 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.register_event(action_event_type)
         setattr(self, 'evt_' + action_event_type, self.action)
         
-        self._build_picture()
-        
-        self.timeline = clutter.Timeline(600)
-        alpha = clutter.Alpha(self.timeline, clutter.EASE_OUT_ELASTIC)
-        self.animation = \
-                        clutter.BehaviourScale(1.1, 1.1, 1.0, 1.0, alpha=alpha)
-        self.animation.apply(self.picture)
-        
         self.label = candies2.StretchText()
         self.label.set_font_name('Sans 16')
         self.label.set_parent(self)
@@ -122,16 +114,30 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             self.label_text = _(self.label_text)
         except NameError:
             pass
-        self.label.set_text(self.label_text)
-        
-        #self.back = clutter.Rectangle()
-        #self.back.set_color('Yellow')
-        #self.back.set_parent(self)
-        
-        #self.lblback = clutter.Rectangle()
-        #self.lblback.set_color('Pink')
-        #self.lblback.set_parent(self)
-    
+
+
+        self._build_picture()
+
+        if self.is_toggle():
+            if self.is_on:
+                self.label.set_text("%s: on" %self.label_text)
+            else:
+                self.label.set_text("%s: off" %self.label_text)
+        else:
+            self.label.set_text(self.label_text)
+       
+        self.timeline = clutter.Timeline(600)
+        alpha = clutter.Alpha(self.timeline, clutter.EASE_OUT_ELASTIC)
+        self.animation = \
+                        clutter.BehaviourScale(1.1, 1.1, 1.0, 1.0, alpha=alpha)
+        self.animation.apply(self.picture)
+
+
+    def is_toggle(self):
+        if self.picture_on is not None and self.picture_off is not None:
+            return True
+        return False
+
     def _build_picture(self):
         import touchwizard
         icon_path = touchwizard.icon_path or ''
@@ -147,7 +153,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         is_on = None
         if os.path.exists(picture_path):
             self.picture = IconPicture(picture_path)
-        elif self.picture_on is not None and self.picture_off is not None:
+        elif self.is_toggle():
             picture_path = self.picture_off
             is_on = self.is_on is True
             if self.is_on:
@@ -253,6 +259,8 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
                 what_to_do = event.content['action']
                 new_state = event.content['state']
         actions = (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY)
+        if self.is_locked:
+            actions = (self.ACTION_ANIMATE_ONLY, )
         if what_to_do in actions:
             self.toggle(new_state)
             self.animate()
@@ -270,9 +278,13 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.timeline.start()
     
     def toggle(self, new_state=None):
-        if self.picture_on is not None and self.picture_off is not None:
+        if self.is_toggle():
             if new_state is None:
                 self.is_on = not self.is_on
+                if self.is_on:
+                    self.label.set_text("%s: on" %self.label_text)
+                else:
+                    self.label.set_text("%s: off" %self.label_text)
             else:
                 logger.debug('in icon: New state is %s', new_state)
                 self.is_on = new_state
