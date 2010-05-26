@@ -13,6 +13,7 @@ infobar_bg = None
 infobar_font = None
 iconbar_bg = None
 scaling_ratio = 1.0
+tolerant_to_page_import_error = True
 
 canvas_width = 1280
 canvas_height = 1024

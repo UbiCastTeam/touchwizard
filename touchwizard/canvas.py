@@ -103,6 +103,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
                 try:
                     module = imp.load_source(f[:-3], os.path.join(path, f))
                 except:
+                    if not touchwizard.tolerant_to_page_import_error:
+                        raise
                     import traceback
                     logger.error('Cannot import page %s:\n%s',
                                                 f[:-3], traceback.format_exc())
