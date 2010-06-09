@@ -136,6 +136,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self._build_iconbar(icons)
         self.current_page.panel.set_parent(self)
         self.current_page.panel.lower_bottom()
+        if hasattr(self.current_page.panel, 'prepare') and callable(self.current_page.panel.prepare):
+            self.current_page.panel.prepare()
         self.current_page.panel.show()
     
     def _build_iconbar(self, icons):
