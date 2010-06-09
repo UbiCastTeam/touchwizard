@@ -3,10 +3,8 @@
 import clutter
 import gobject
 import easyevent
-import types
 import logging
 import os
-import pexpect
 
 logger = logging.getLogger('touchwizard')
 
@@ -97,7 +95,6 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             origin = sys.modules[self.first_page.__module__].__file__
             path = os.path.dirname(os.path.abspath(os.path.expanduser(origin)))
         import imp
-        pages = list()
         for f in os.listdir(path):
             if f.endswith('.py') and f != os.path.basename(origin):
                 try:
