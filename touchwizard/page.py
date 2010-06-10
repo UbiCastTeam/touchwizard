@@ -33,6 +33,7 @@ class Page(object):
     provides = tuple()
     requires = tuple()
     need_session = False
+    need_loading = False
     reuse = False
     my_icon = None
     title = None

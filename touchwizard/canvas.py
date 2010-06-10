@@ -6,6 +6,8 @@ import easyevent
 import logging
 import os
 
+from touchwizard.loading import LoadingWidget
+
 logger = logging.getLogger('touchwizard')
 
 class Canvas(clutter.Actor, clutter.Container, easyevent.User):
@@ -62,7 +64,11 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         
         self.iconbar = touchwizard.IconBar()
         self.iconbar.set_parent(self)
-        
+
+        self.loading = LoadingWidget()
+        self.loading.set_parent(self)
+        self.loading.hide()
+
         self.home_icon = touchwizard.Icon('shutdown')
         self.home_icon.build()
         easyevent.forward_event('icon_shutdown_actioned', 'request_quit')
@@ -71,7 +77,6 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.previous_icon = touchwizard.IconRef(touchwizard.Icon('previous'))
         #self.previous_icon.build()
         easyevent.forward_event('icon_previous_actioned', 'previous_page')
-        
         
         self.history = list()
         self.first_page = first_page
@@ -130,6 +135,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.current_page = page
             logger.info('Reusing already instanciated page %s from cache.',
                                                         self.current_page.name)
+        if page.need_loading:
+            self.loading.hide()
         self._build_iconbar(icons)
         self.current_page.panel.set_parent(self)
         self.current_page.panel.lower_bottom()
@@ -183,7 +190,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     
     def evt_next_page(self, event):
         if self.last_page_name is None or self.last_page_name != event.content:
-            gobject.timeout_add(300, self.do_next_page, event)
+            gobject.idle_add(self.do_next_page, event)
             self.unregister_event('next_page')
 
     def do_next_page(self, event):
@@ -194,11 +201,14 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         icon_states = self.iconbar.get_icon_states()
         self.history.append((self.current_page, icon_states))
         new_page = self.available_pages[name]
-        self.display_page(new_page)
+        self.iconbar.clear(keep_back=True)
+        if new_page.need_loading:
+            self.loading.show()
+        gobject.idle_add(self.display_page, new_page)
         self.register_event('next_page')
     
     def evt_previous_page(self, event):
-        gobject.timeout_add(300, self.do_previous_page, event)
+        gobject.idle_add(self.do_previous_page, event)
 
     def do_previous_page(self, event):
         try:
@@ -212,7 +222,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.current_page.panel.unparent()
         if not self.current_page.reuse:
             self.current_page.panel.destroy()
-        self.display_page(previous, icons)
+        if previous.need_loading:
+            self.loading.show()
+        gobject.idle_add(self.display_page, previous, icons)
     
     def evt_request_quit(self, event):
         self.evt_request_quit = self.evt_request_quit_fake
@@ -246,7 +258,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     def do_allocate(self, box, flags):
         canvas_width = box.x2 - box.x1
         canvas_height = box.y2 - box.y1
-        
+
         infobar_height = round(self.infobar.get_preferred_height(canvas_width)[1])
         infobar_box = clutter.ActorBox()
         infobar_box.x1 = 0
@@ -268,6 +280,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         panel_box.y1 = infobar_height
         panel_box.x2 = canvas_width
         panel_box.y2 = canvas_height - iconbar_height
+
+        self.loading.allocate(panel_box, flags)
+
         if self.background is not None:
             self.background.allocate(panel_box, flags)
         if self.current_page is not None:
@@ -276,7 +291,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         clutter.Actor.do_allocate(self, box, flags)
     
     def do_foreach(self, func, data=None):
-        children = [self.infobar, self.iconbar]
+        children = [self.infobar, self.iconbar, self.loading]
         if self.background:
             children.insert(0, self.background)
         if self.current_page is not None:
@@ -290,6 +305,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             children.insert(0, self.background)
         if self.current_page is not None:
             children.append(self.current_page.panel)
+        children.append(self.loading)
         for child in children:
             child.paint()
     

@@ -6,6 +6,7 @@ import gobject
 import easyevent
 import candies2
 import logging
+import touchwizard
 
 logger = logging.getLogger('touchwizard')
 
@@ -109,12 +110,12 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         
         self.label = candies2.StretchText()
         self.label.set_font_name('Sans 16')
+        self.label.set_color(touchwizard.font_color)
         self.label.set_parent(self)
         try:
             self.label_text = _(self.label_text)
         except NameError:
             pass
-
 
         self._build_picture()
 

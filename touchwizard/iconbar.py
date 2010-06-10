@@ -82,12 +82,16 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
             icons.append(None)
         return icons
     
-    def clear(self):
+    def clear(self, keep_back=False):
         for icon in self._all_icons:
-            icon.unparent()
-            icon.destroy()
-        
-        self._previous = None
+            if icon is self._previous:
+                if not keep_back:
+                    icon.unparent()
+                    icon.destroy()
+                    self._previous = None
+            else:
+                icon.unparent()
+                icon.destroy()
         self._icons = list()
         self._next = None
         logger.debug('Icon bar cleared.')

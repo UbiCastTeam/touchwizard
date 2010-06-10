@@ -17,3 +17,6 @@ tolerant_to_page_import_error = True
 
 canvas_width = 1280
 canvas_height = 1024
+
+loading_message = 'Loading ...'
+font_color = 'Black'
