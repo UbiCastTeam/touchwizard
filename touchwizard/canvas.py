@@ -215,9 +215,13 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.display_page(previous, icons)
     
     def evt_request_quit(self, event):
+        self.evt_request_quit = self.evt_request_quit_fake
         logger.info('Quit requested.')
         self.launch_event('prepare_quit')
         self.launch_event('wizard_quit')
+    
+    def evt_request_quit_fake(self, event):
+        logger.error('Quit request rejected.')
     
     def evt_request_session(self, event):
         self.launch_event('dispatch_session', self.session)
