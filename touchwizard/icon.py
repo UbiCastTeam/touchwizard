@@ -51,7 +51,10 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
       - lock_icon_<name> (is_locked)
           Lock the icon (make it disabled) if the content is True or not set.
           Unlock the icon (make it enabled) it the content is False.
-    
+
+      - set_icon_<name> ({'toset': 'label', 'value': 'New text'})
+          Reset some of the icon attributes
+
       - action_icon_<name> (what_to_do)
           Simulates an icon push. Depending on the content value, either it
           discretely runs the operation that an icon push do (if content set to
@@ -73,6 +76,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     default_cooldown = 500
     actioned_event_type_pattern = 'icon_%s_actioned'
     lock_event_type_pattern = 'lock_icon_%s'
+    set_event_type_pattern = 'set_icon_%s'
     action_event_type_pattern = 'action_icon_%s'
     
     def __init__(self, name, label=None):
@@ -101,7 +105,13 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         #logger.debug('Registering to event type %s.', lock_event_type)
         self.register_event(lock_event_type)
         setattr(self, 'evt_' + lock_event_type, self.evt_lock_icon)
-        
+
+        # Remotely set icon parameters
+        set_event_type = self.set_event_type_pattern %(self.name)
+        #logger.debug('Registering to event type %s.', lock_event_type)
+        self.register_event(set_event_type)
+        setattr(self, 'evt_' + set_event_type, self.evt_set_icon)
+
         # Remotely simulate a button click (operation and/or animation)
         action_event_type = self.action_event_type_pattern %(self.name)
         #logger.debug('Registering to event type %s.', action_event_type)
@@ -119,13 +129,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
 
         self._build_picture()
 
-        if self.is_toggle():
-            if self.is_on:
-                self.label.set_text("%s: on" %self.label_text)
-            else:
-                self.label.set_text("%s: off" %self.label_text)
-        else:
-            self.label.set_text(self.label_text)
+        self.update_text()
        
         self.timeline = clutter.Timeline(600)
         alpha = clutter.Alpha(self.timeline, clutter.EASE_OUT_ELASTIC)
@@ -133,6 +137,14 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
                         clutter.BehaviourScale(1.1, 1.1, 1.0, 1.0, alpha=alpha)
         self.animation.apply(self.picture)
 
+    def update_text(self):
+        if self.is_toggle():
+            if self.is_on:
+                self.label.set_text("%s: on" %self.label_text)
+            else:
+                self.label.set_text("%s: off" %self.label_text)
+        else:
+            self.label.set_text(self.label_text)
 
     def is_toggle(self):
         if self.picture_on is not None and self.picture_off is not None:
@@ -312,6 +324,21 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.picture.set_reactive(True)
         self.picture.set_opacity(255)
         return False
+
+    def evt_set_icon(self, event):
+        if isinstance(event.content, dict):
+            toset = event.content.get('toset', 'label')
+            value = event.content.get('value', None)
+            mode = event.content.get('mode', 'replace')
+            if toset == 'label' and value is not None:
+                if mode == 'replace':
+                    self.label_text = value
+                elif mode == 'append':
+                    value = str(value)
+                    if not hasattr(self, 'base_text'):
+                        self.base_text = self.label_text
+                    self.label_text = '%s %s' %(self.base_text, value)
+                self.update_text()
 
     def evt_lock_icon(self, event):
         if event.content is not False:
