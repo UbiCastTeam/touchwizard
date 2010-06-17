@@ -25,6 +25,11 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
         
+        self.padding = 10
+        self._previous = None
+        self._icons = list()
+        self._next = None
+        
         self.background = clutter.Rectangle()
         self.background.set_color(clutter.color_from_string('LightGray'))
         if touchwizard.iconbar_bg:
@@ -35,10 +40,6 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
                 logger.error('Iconbar background %s not found.',
                                                         touchwizard.iconbar_bg)
         self.background.set_parent(self)
-        
-        self._previous = None
-        self._icons = list()
-        self._next = None
     
     @property
     def _all_icons(self):
@@ -124,6 +125,8 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
     def do_allocate(self, box, flags):
         bar_width = box.x2 - box.x1
         bar_height = box.y2 - box.y1
+        inner_width = bar_width - 2*self.padding
+        inner_height = bar_height - self.padding
         
         bbox = clutter.ActorBox(0, 0, bar_width, bar_height)
         self.background.allocate(bbox, flags)
@@ -131,22 +134,29 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
         previous_width = 0
         if self._previous is not None:
             previous_width = self._previous.get_preferred_width(bar_height)[1]
-            icon_box = clutter.ActorBox(0, 0, previous_width, bar_height)
+            icon_box = clutter.ActorBox()
+            icon_box.x1 = self.padding
+            icon_box.y1 = 0
+            icon_box.x2 = self.padding + previous_width
+            icon_box.y2 = inner_height
             self._previous.show()
             self._previous.allocate(icon_box, flags)
         
         next_width = 0
         if self._next is not None:
             next_width = self._next.get_preferred_width(bar_height)[1]
-            icon_box = clutter.ActorBox(bar_width - next_width, 0,
-                                                         bar_width, bar_height)
+            icon_box = clutter.ActorBox()
+            icon_box.x1 = bar_width - self.padding - next_width
+            icon_box.y1 = 0
+            icon_box.x2 = bar_width - self.padding
+            icon_box.y2 = inner_height
             self._next.allocate(icon_box, flags)
         
         if self._icons:
-            remaining_width = bar_width - previous_width - next_width
+            remaining_width = inner_width - previous_width - next_width
             available_icon_width = remaining_width / len(self._icons)
             
-            x = previous_width
+            x = previous_width + self.padding
             for icon in self._icons:
                 icon_box = clutter.ActorBox()
                 icon_width = icon.get_preferred_width(bar_height)[1]
@@ -155,13 +165,13 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
                     icon_box.x1 = x + x_offset
                     icon_box.y1 = 0
                     icon_box.x2 = icon_box.x1 + icon_width
-                    icon_box.y2 = bar_height
+                    icon_box.y2 = inner_height
                     x = icon_box.x2 + x_offset
                 else:
                     icon_box.x1 = x
                     icon_box.y1 = 0
                     icon_box.x2 = icon_box.x1 + available_icon_width
-                    icon_box.y2 = bar_height
+                    icon_box.y2 = inner_height
                     x = icon_box.x2
                 icon.allocate(icon_box, flags)
         
