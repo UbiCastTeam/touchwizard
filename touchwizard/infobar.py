@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*
 
+import os
+import sys
+import traceback
 import clutter
 import easyevent
 import logging
 import candies2
 import pango
-import os
 import gobject
 from infoicon import InfoIcon
 
@@ -24,6 +26,16 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
           text.
 
     Launch no event.
+    
+    Used images files:
+        - <touchwizard images path>/infobar/common/global_bg.png
+        - <touchwizard images path>/infobar/common/text_bg_image_left.png
+        - <touchwizard images path>/infobar/common/text_bg_image_middle.png
+        - <touchwizard images path>/infobar/common/text_bg_image_right.png
+        - <touchwizard images path>/infobar/common/icon_bg_image_left.png
+        - <touchwizard images path>/infobar/common/icon_bg_image_middle.png
+        - <touchwizard images path>/infobar/common/icon_bg_image_right.png
+    All images files are optionnal.
     """
     __gtype_name__ = 'InfoBar'
     types = dict(normal='#ffffffff', error='#ff8888ff')
@@ -166,8 +178,14 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         if callback is not None:
             try:
                 callback(icon)
-            except:
-                logger.debug('Error in info bar add icon callback')
+            except Exception, e:
+                logger.error('Error in info bar add icon callback %s: %s' %(callback, e))
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                error_messages = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                for error_message in error_messages:
+                    for line in error_message.split('\n'):
+                        if line.strip():
+                            logger.error(line)
         return False
     
     def evt_infobar_modify_icon(self, event):

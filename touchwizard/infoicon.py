@@ -11,6 +11,15 @@ logger = logging.getLogger('touchwizard')
 
 
 class InfoIcon(candies2.ToolTipManager, easyevent.User):
+    """
+    Class InfoIcon is used for info bar icons.
+    
+    Used images files:
+        - <touchwizard images path>/infobar/common/tooltip_texture.png
+        - <touchwizard images path>/infobar/common/tooltip_pointer.png
+        - <touchwizard images path>/infobar/<icon name>.png
+    All images files are optionnal.
+    """
     __gtype_name__ = 'InfoIcon'
     STATUSES = ['READY', 'DISABLED', 'ERROR', 'WARNING']
     
@@ -32,15 +41,18 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         
         self.set_status(self.STATUSES[0])
         
-        """
+    """
         self._build_picture()
         
         self.timeline = clutter.Timeline(600)
         alpha = clutter.Alpha(self.timeline, clutter.EASE_OUT_ELASTIC)
         self.animation = clutter.BehaviourScale(1.1, 1.1, 1.0, 1.0, alpha=alpha)
         self.animation.apply(self.picture)
-        """
-
+    
+    def animate(self):
+        self.timeline.start()
+    """
+    
     def _apply_skin(self):
         import touchwizard
         # Apply skin
@@ -61,13 +73,20 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         
         # Images
         self.images_path = touchwizard.images_path or ''
-        
+        #tooltip_texture
+        tooltip_texture_src = os.path.join(self.images_path, 'infobar', 'common', 'tooltip_texture.png')
+        if os.path.exists(tooltip_texture_src):
+            tooltip_texture = clutter.cogl.texture_new_from_file(tooltip_texture_src)
+            self.tooltip.set_texture(tooltip_texture)
+        else:
+            logger.error('in infobar icon: Image file for tooltip texture (%s) does not exist.', tooltip_texture_src)
+        #tooltip_pointer
         tooltip_pointer_src = os.path.join(self.images_path, 'infobar', 'common', 'tooltip_pointer.png')
         if os.path.exists(tooltip_pointer_src):
             self.set_pointer_texture(tooltip_pointer_src)
         else:
             logger.error('in infobar icon: Image file for tooltip pointer (%s) does not exist.', tooltip_pointer_src)
-        
+        #icon image
         if self.icon_src is not None:
             icon_src = self.icon_src
         else:
@@ -76,6 +95,12 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
             self.content.set_icon(icon_src)
         else:
             logger.error('in infobar icon: Icon file %s does not exist.', icon_src)
+    
+    def get_text(self):
+        return self.content.get_text()
+    
+    def set_text(self, text):
+        self.content.set_text(text)
         
     def set_status(self, status):
         new_status = status.upper()
@@ -108,9 +133,6 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
                 pass
             self.display_tooltip(True)
         return False
-    
-    def animate(self):
-        self.timeline.start()
     
     def do_destroy(self):
         self.unregister_all_events()

@@ -34,7 +34,6 @@ infobar_skin = dict(
     tooltip_radius = 5,
     tooltip_x_padding = 10,
     tooltip_y_padding = 0,
-    tooltip_pointer = None,
 )
 
 canvas_width = 1280
