@@ -170,11 +170,13 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         
         name = event.content.get('name')
         label = event.content.get('label', '')
+        status = event.content.get('status', None)
         src = event.content.get('src', None)
         clickable = event.content.get('clickable', False)
+        tooltip = event.content.get('tooltip', '')
         callback = event.content.get('callback', None)
         
-        icon = self.icon_manager.add_icon(name, label, src, clickable)
+        icon = self.icon_manager.add_icon(name, label, status, src, clickable, tooltip)
         if callback is not None:
             try:
                 callback(icon)
@@ -344,18 +346,18 @@ class IconManager(clutter.Actor, clutter.Container):
                 self.tooltip_displayed.display_tooltip(False)
             self.tooltip_displayed = actor
     
-    def add_icon(self, name, label='', icon_src=None, clickable=False):
+    def add_icon(self, name, label='', status=None, icon_src=None, clickable=False, tooltip=''):
         icon = self.get_icon(name)
         if icon is not None:
             return None
-        icon = InfoIcon(name, label=label, icon_src=icon_src, clickable=clickable, icon_height=self.icon_height, padding=self.icon_padding)
-        self.add(icon)
+        icon = InfoIcon(name, label=label, status=status, icon_src=icon_src, clickable=clickable, tooltip=tooltip, icon_height=self.icon_height, padding=self.icon_padding)
+        self._add(icon, index=0)
         return icon
     
     def modify_icon(self, name=None, actor=None, changes=dict()):
         icon = self.get_icon(name, actor)
         if icon is not None:
-            self.remove(icon)
+            self._remove(icon)
         return False
     
     def remove_icon(self, name=None, actor=None):
@@ -373,23 +375,24 @@ class IconManager(clutter.Actor, clutter.Container):
                     return child
         return None
     
-    def do_add(self, *children):
-        for child in children:
-            if child in self._children:
-                raise Exception("Actor %s is already a children of %s" % (child, self))
-            self._children.append(child)
-            child.on_tooltip_display = self.on_tooltip_display
-            child.set_parent(self)
-            self.queue_relayout()
+    def _add(self, actor, index=-1):
+        if actor in self._children:
+            raise Exception("Actor %s is already a children of %s" % (actor, self))
+        if index > -1:
+            self._children.insert(index, actor)
+        else:
+            self._children.append(actor)
+        actor.on_tooltip_display = self.on_tooltip_display
+        actor.set_parent(self)
+        self.queue_relayout()
     
-    def do_remove(self, *children):
-        for child in children:
-            if child in self._children:
-                self._children.remove(child)
-                child.unparent()
-                self.queue_relayout()
-            else:
-                raise Exception("Actor %s is not a child of %s" % (child, self))
+    def _remove(self, actor):
+        if actor in self._children:
+            self._children.remove(actor)
+            actor.unparent()
+            self.queue_relayout()
+        else:
+            raise Exception("Actor %s is not a child of %s" % (actor, self))
     
     def do_get_preferred_width(self, for_height):
         if for_height != -1:

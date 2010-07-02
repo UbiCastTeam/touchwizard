@@ -16,10 +16,10 @@ tolerant_to_page_import_error = True
 infobar_skin = dict(
     backgrounds_width = 20,
     
-    text_font_name = '20',
+    text_font_name = '18',
     text_font_color = '#ffffffff',
     
-    icon_font_name = '16',
+    icon_font_name = '14',
     icon_font_color = '#ffffffff',
     icon_inner_color = '#888888ff',
     icon_border_color = '#aaaaaaff',

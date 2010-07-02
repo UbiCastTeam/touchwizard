@@ -17,13 +17,15 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     Used images files:
         - <touchwizard images path>/infobar/common/tooltip_texture.png
         - <touchwizard images path>/infobar/common/tooltip_pointer.png
+        - <touchwizard images path>/infobar/common/status_<status>.png
+        - <touchwizard images path>/infobar/common/status_<status>_small.png
         - <touchwizard images path>/infobar/<icon name>.png
     All images files are optionnal.
     """
     __gtype_name__ = 'InfoIcon'
-    STATUSES = ['READY', 'DISABLED', 'ERROR', 'WARNING']
+    STATUSES = ['UNKNOWN', 'READY', 'DISABLED', 'INFO', 'ERROR', 'WARNING']
     
-    def __init__(self, name, label='', icon_src=None, clickable=True, icon_height=48, padding=8):
+    def __init__(self, name, label='', status=None, icon_src=None, clickable=True, tooltip='', icon_height=48, padding=8):
         self.name = name
         self.label_text = label
         self.icon_src = icon_src
@@ -31,7 +33,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         self.on_tooltip_display = None
         self.images_path = ''
         
-        self.tooltip = candies2.OptionLine('tooltip', 'default message', padding=6)
+        self.tooltip = candies2.OptionLine('tooltip', tooltip, padding=6)
         self.content = IconContent(self.name, self.label_text, icon_height=icon_height, padding=padding)
         candies2.ToolTipManager.__init__(self, tooltip_actor=self.tooltip, content_actor=self.content, h_direction='left', v_direction='bottom', clickable=clickable, long_click=False, tooltip_duration=4000, animation_duration=300, tooltip_x_padding=10, tooltip_y_padding=0)
         easyevent.User.__init__(self)
@@ -40,6 +42,8 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         self._apply_skin()
         
         self.set_status(self.STATUSES[0])
+        if status is not None:
+            self.set_status(status)
         
     """
         self._build_picture()
