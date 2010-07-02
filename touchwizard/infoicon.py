@@ -91,20 +91,27 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         else:
             logger.error('in infobar icon: Image file for tooltip pointer (%s) does not exist.', tooltip_pointer_src)
         #icon image
-        if self.icon_src is not None:
-            icon_src = self.icon_src
-        else:
-            icon_src = os.path.join(self.images_path, 'infobar', '%s.png' %(self.name))
-        if os.path.exists(icon_src):
-            self.content.set_icon(icon_src)
-        else:
-            logger.error('in infobar icon: Icon file %s does not exist.', icon_src)
+        self.set_src(self.icon_src)
     
     def get_text(self):
         return self.content.get_text()
     
     def set_text(self, text):
         self.content.set_text(text)
+    
+    def set_tooltip_text(self, text):
+        self.tooltip.set_text(text)
+    
+    def set_src(self, icon_src):
+        self.icon_src = icon_src
+        if self.icon_src is not None:
+            used_src = self.icon_src
+        else:
+            used_src = os.path.join(self.images_path, 'infobar', '%s.png' %(self.name))
+        if os.path.exists(used_src):
+            self.content.set_icon(used_src)
+        else:
+            logger.error('in infobar icon: Icon file %s does not exist.', used_src)
         
     def set_status(self, status):
         new_status = status.upper()
@@ -123,20 +130,19 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
             else:
                 logger.error('in infobar icon: Icon file %s does not exist.', status_icon_src)
     
-    def toggle_tooltip_display(self):
-        if self._tooltip_displayed:
+    def display_tooltip(self, boolean):
+        if boolean:
             try:
                 self.on_tooltip_display(self, False)
             except:
                 pass
-            self.display_tooltip(False)
+            self._show_tooltip()
         else:
             try:
                 self.on_tooltip_display(self, True)
             except:
                 pass
-            self.display_tooltip(True)
-        return False
+            self._hide_tooltip()
     
     def do_destroy(self):
         self.unregister_all_events()

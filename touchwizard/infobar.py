@@ -101,6 +101,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         # icon
         self.register_event('infobar_add_icon')
         self.register_event('infobar_modify_icon')
+        self.register_event('infobar_display_icon_tooltip')
         self.register_event('infobar_remove_icon')
     
     def _set_bg_image(self, texture, image_name):
@@ -191,17 +192,39 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         return False
     
     def evt_infobar_modify_icon(self, event):
+        logger.debug('Info bar change icon param: %s', event.content)
+        
+        if not isinstance(event.content, dict):
+            if isinstance(event.content, str):
+                event.content = dict(name=event.content)
+            else:
+                event.content = dict(actor=event.content)
+        
+        self.icon_manager.modify_icon(event.content)
+        return False
+    
+    def evt_infobar_display_icon_tooltip(self, event):
+        logger.debug('Info bar display icon tooltip: %s', event.content)
+        
+        if not isinstance(event.content, dict):
+            if isinstance(event.content, str):
+                event.content = dict(name=event.content)
+            else:
+                event.content = dict(actor=event.content)
+        
+        self.icon_manager.display_icon_tooltip(event.content)
         return False
     
     def evt_infobar_remove_icon(self, event):
-        name = None
-        actor = None
-        if isinstance(event.content, str):
-            name = event.content
-        else:
-            actor = event.content
+        logger.debug('Info bar remove icon: %s', event.content)
         
-        self.icon_manager.remove_icon(name, actor)
+        if not isinstance(event.content, dict):
+            if isinstance(event.content, str):
+                event.content = dict(name=event.content)
+            else:
+                event.content = dict(actor=event.content)
+        
+        self.icon_manager.remove_icon(event.content)
         return False
     
     # allocation and preferred size
@@ -347,26 +370,47 @@ class IconManager(clutter.Actor, clutter.Container):
             self.tooltip_displayed = actor
     
     def add_icon(self, name, label='', status=None, icon_src=None, clickable=False, tooltip=''):
-        icon = self.get_icon(name)
+        icon = self.get_icon(dict(name=name))
         if icon is not None:
             return None
         icon = InfoIcon(name, label=label, status=status, icon_src=icon_src, clickable=clickable, tooltip=tooltip, icon_height=self.icon_height, padding=self.icon_padding)
         self._add(icon, index=0)
         return icon
     
-    def modify_icon(self, name=None, actor=None, changes=dict()):
-        icon = self.get_icon(name, actor)
+    def display_icon_tooltip(self, params=dict):
+        icon = self.get_icon(params)
+        if icon is not None:
+            if 'text' in params:
+                icon.set_tooltip_text(params['text'])
+            if 'status' in params:
+                icon.set_status(params['status'])
+            icon.display_tooltip(True)
+        return False
+    
+    def modify_icon(self, params=dict()):
+        icon = self.get_icon(params)
+        if icon is not None:
+            if 'label' in params:
+                icon.set_text(params['label'])
+            if 'status' in params:
+                icon.set_status(params['status'])
+            if 'src' in params:
+                icon.set_src(params['src'])
+            if 'clickable' in params:
+                icon.set_clickable(params['clickable'])
+            if 'tooltip' in params:
+                icon.set_tooltip_text(params['tooltip'])
+        return False
+    
+    def remove_icon(self, params=dict()):
+        icon = self.get_icon(params)
         if icon is not None:
             self._remove(icon)
         return False
     
-    def remove_icon(self, name=None, actor=None):
-        icon = self.get_icon(name, actor)
-        if icon is not None:
-            pass
-        return False
-    
-    def get_icon(self, name=None, actor=None):
+    def get_icon(self, params):
+        name = params.get('name', None)
+        actor = params.get('actor', None)
         if actor is not None and actor in self._children:
             return actor
         elif actor is None and name is not None:
