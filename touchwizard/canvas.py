@@ -301,10 +301,10 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     
     def do_paint(self):
         children = [self.infobar, self.iconbar]
+        if self.current_page is not None:
+            children.insert(0, self.current_page.panel)
         if self.background:
             children.insert(0, self.background)
-        if self.current_page is not None:
-            children.append(self.current_page.panel)
         children.append(self.loading)
         for child in children:
             child.paint()

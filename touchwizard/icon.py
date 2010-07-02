@@ -153,11 +153,11 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
 
     def _build_picture(self):
         import touchwizard
-        icon_path = touchwizard.icon_path or ''
-        picture_path = os.path.join(icon_path, '%s.png' %(self.name))
+        images_path = touchwizard.images_path or ''
+        picture_path = os.path.join(images_path, 'iconbar', '%s.png' %(self.name))
         
-        picture_on = os.path.join(icon_path, '%s_on.png' %(self.name))
-        picture_off = os.path.join(icon_path, '%s_off.png' %(self.name))
+        picture_on = os.path.join(images_path, 'iconbar', '%s_on.png' %(self.name))
+        picture_off = os.path.join(images_path, 'iconbar', '%s_off.png' %(self.name))
         if os.path.exists(picture_on):
             self.picture_on = picture_on
         if os.path.exists(picture_off):

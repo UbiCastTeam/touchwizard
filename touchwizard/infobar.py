@@ -7,6 +7,7 @@ import candies2
 import pango
 import os
 import gobject
+from infoicon import InfoIcon
 
 logger = logging.getLogger('touchwizard')
 
@@ -25,241 +26,410 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     Launch no event.
     """
     __gtype_name__ = 'InfoBar'
-    locations = ('top-left', 'top-right', 'bottom-left', 'bottom-right')
-    styles = dict(normal='White', reverted='Black', error='Red')
+    types = dict(normal='#ffffffff', error='#ff8888ff')
 
     def __init__(self):
         import touchwizard
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
-
+        self._children = list()
+        self.images_path = touchwizard.images_path or ''
+        self._stage = None
+        self._type = None
+        self.padding = 10
+        self.spacing = 5
+        
         self.hide_id = None
-
-        self.background = clutter.Rectangle()
-        self.background.set_color(clutter.color_from_string('LightGray'))
-        if touchwizard.infobar_bg:
-            if os.path.exists(touchwizard.infobar_bg):
-                self.background = clutter.Texture(touchwizard.infobar_bg)
-                self.background.set_keep_aspect_ratio(True)
-            else:
-                logger.error('InfoBar background %s not found.',
-                                                        touchwizard.infobar_bg)
-        self.background.set_parent(self)
-        self.__stage = None
-
-        self.labels = dict()
-        for location in self.locations:
-            #label = candies2.StretchText()
-            label = clutter.Text()
-            if touchwizard.infobar_font:
-                label.set_font_name(touchwizard.infobar_font)
-            label.set_parent(self)
-            self.labels[location] = label
-
-        self.ellipsis = clutter.Text()
-        self.ellipsis.set_text('...')
-        if touchwizard.infobar_font:
-            self.ellipsis.set_font_name(touchwizard.infobar_font)
-
-        self.editable_label = clutter.Text()
-        if touchwizard.infobar_font:
-                self.editable_label.set_font_name(touchwizard.infobar_font)
-        self.editable_label.set_color(self.styles['normal'])
-        self.editable_label.set_editable(True)
-        self.editable_label.set_cursor_visible(True)
-        self.editable_label.hide()
-        self.editable_label.set_parent(self)
-
+        
+        # Background images
+        self.backgrounds_width = touchwizard.infobar_skin['backgrounds_width']
+        self.global_bg = clutter.Texture()
+        self._set_bg_image(self.global_bg, 'global_bg')
+        self._add(self.global_bg)
+        self.text_bg_left = clutter.Texture()
+        self._set_bg_image(self.text_bg_left, 'text_bg_image_left')
+        self._add(self.text_bg_left)
+        self.text_bg_middle = clutter.Texture()
+        self._set_bg_image(self.text_bg_middle, 'text_bg_image_middle')
+        self._add(self.text_bg_middle)
+        self.text_bg_right = clutter.Texture()
+        self._set_bg_image(self.text_bg_right, 'text_bg_image_right')
+        self._add(self.text_bg_right)
+        self.icon_bg_left = clutter.Texture()
+        self._set_bg_image(self.icon_bg_left, 'icon_bg_image_left')
+        self._add(self.icon_bg_left)
+        self.icon_bg_middle = clutter.Texture()
+        self._set_bg_image(self.icon_bg_middle, 'icon_bg_image_middle')
+        self._add(self.icon_bg_middle)
+        self.icon_bg_right = clutter.Texture()
+        self._set_bg_image(self.icon_bg_right, 'icon_bg_image_right')
+        self._add(self.icon_bg_right)
+        
+        # Label
+        self.label = candies2.TextContainer(rounded=False, padding=self.padding)
+        self.label.set_font_name(touchwizard.infobar_skin['text_font_name'])
+        self.label.set_font_color(touchwizard.infobar_skin['text_font_color'])
+        self.label.set_inner_color('#00000000')
+        self.label.set_border_color('#00000000')
+        self.label.set_border_width(0)
+        self.label.set_radius(0)
+        self.label.set_line_alignment('center')
+        self.label.set_line_wrap(True)
+        self._add(self.label)
+        
+        # Icons
+        self.icon_manager = IconManager(padding=self.padding, spacing=self.spacing)
+        self._add(self.icon_manager)
+        
+        # Events
+        # text
         self.register_event('info_message')
-        self.register_event('set_infobar_editable')
-        self.register_event('request_infobar_editable')
-        self.register_event('clear_infobar')
+        self.register_event('infobar_message')
+        self.register_event('infobar_clear')
+        # icon
+        self.register_event('infobar_add_icon')
+        self.register_event('infobar_modify_icon')
+        self.register_event('infobar_remove_icon')
+    
+    def _set_bg_image(self, texture, image_name):
+        image_src = os.path.join(self.images_path, 'infobar', 'common', '%s.png' %image_name)
+        if os.path.exists(image_src):
+            texture.set_from_file(image_src)
+            texture.show()
+        else:
+            texture.hide()
+            logger.error('in infobar: Image file for background (%s) does not exist.', image_src)
+    
+    def set_type(self, new_type):
+        if new_type is not None and new_type != self._type and new_type in self.types:
+            self._type = new_type
+            self.label.set_font_color(self.types.get(self._type, '#ffffffff'))
+        
 
     @property
     def stage(self):
-        if self.__stage is not None:
-            return self.__stage
+        if self._stage is not None:
+            return self._stage
         actor = self
         while actor.get_parent() is not None:
             actor = actor.get_parent()
-        self.__stage = actor
-        return actor
-
-#---------------------for keyboard--------------------------
-    def evt_request_infobar_editable(self, event):
-        self.editable_label.show()
-        self.launch_event('infobar_editable_reply', self.editable_label)
-
-    def evt_set_infobar_editable(self,event):
-        self.editable_label.set_selection(-1,-1)
-        prefix = ''
-        if event.content is False:
-            prefix = 'not '
-        logger.info('Setting info bar %seditable.', prefix)
-        if event.content:
-            self.stage.set_key_focus(self.editable_label)
-            for label in self.labels.values():
-                label.hide()
-            self.editable_label.set_text('')
-            self.editable_label.show()
+        if isinstance(actor, clutter.Stage):
+            self._stage = actor
+            return actor
         else:
-            self.stage.set_key_focus(None)
-            for label in self.labels.values():
-                label.show()
-            self.editable_label.hide()
-#-----------------------------------------------------------
-
+            return None
+    
+    # text evt
+    #-----------------------------------------------------------
     def evt_info_message(self, event):
-        if self.hide_id  is not None:
+        self.evt_infobar_message(event)
+    
+    def evt_infobar_message(self, event):
+        if self.hide_id is not None:
             gobject.source_remove(self.hide_id)
         logger.debug('Info message: %s', event.content)
-        if self.editable_label.props.visible:
-            return
         if not isinstance(event.content, dict):
             event.content = dict(text=event.content)
-
+        
         new_text = event.content.get('text')
-        style = event.content.get('style')
-        location = event.content.get('location', self.locations[0])
+        new_type = event.content.get('type', 'normal')
         autoclear = event.content.get('autoclear', False)
         autoclear_delay = event.content.get('autoclear_delay', 2000)
-
-        if style is None:
-            if location.startswith('bottom'):
-                style = 'reverted'
-            else:
-                style = 'normal'
-
-        label = self.labels[location]
-        label.set_color(self.styles[style])
-        if new_text is not None:
-            label.set_text(new_text)
-            if autoclear:
-                self.hide_id = gobject.timeout_add(autoclear_delay,
-                                                        self.evt_clear_infobar)
-
-    def evt_clear_infobar(self, event=None):
-        for label in self.labels:
-            self.labels[label].set_text('')
-        self.hide_id = None
+        
+        self.label.set_text(new_text)
+        self.set_type(new_type)
+        if autoclear:
+            self.hide_id = gobject.timeout_add(autoclear_delay, self.evt_infobar_clear)
         return False
     
-    def do_get_preferred_width(self, for_height):
-        tl_min, tl_nat = \
-                        self.labels['top-left'].get_preferred_width(for_height)
-        tr_min, tr_nat = \
-                       self.labels['top-right'].get_preferred_width(for_height)
-        bl_min, bl_nat = \
-                     self.labels['bottom-left'].get_preferred_width(for_height)
-        br_min, br_nat = \
-                    self.labels['bottom-right'].get_preferred_width(for_height)
-        min = max(tl_min + tr_min, bl_min, br_min)
-        nat = max(tl_nat + tr_nat, bl_nat, br_nat)
-        if isinstance(self.background, clutter.Texture):
-            nat = self.background.get_preferred_width(for_height)[1]
-        return min, nat
-
-    def do_get_preferred_height(self, for_width):
-        import touchwizard
+    def evt_infobar_clear(self, event=None):
+        self.label.set_text('')
+        if self.hide_id is not None:
+            gobject.source_remove(self.hide_id)
+            self.hide_id = None
+        return False
+    
+    # icon evt
+    #-----------------------------------------------------------
+    def evt_infobar_add_icon(self, event):
+        logger.debug('Info bar add icon with properties: %s', event.content)
+        if not isinstance(event.content, dict):
+            event.content = dict(name=event.content)
         
-        tl_min, tl_nat = \
-                        self.labels['top-left'].get_preferred_height(for_width)
-        tr_min, tr_nat = \
-                       self.labels['top-right'].get_preferred_height(for_width)
-        bl_min, bl_nat = \
-                     self.labels['bottom-left'].get_preferred_height(for_width)
-        br_min, br_nat = \
-                    self.labels['bottom-right'].get_preferred_height(for_width)
-        min = max(tl_min + bl_min, tr_min, br_min)
-        nat = max(tl_nat + bl_nat, tr_nat, br_nat)
-        if isinstance(self.background, clutter.Texture):
-            nat = self.background.get_preferred_height(for_width)[1]
-        return min, nat * touchwizard.scaling_ratio
-
+        name = event.content.get('name')
+        label = event.content.get('label', '')
+        src = event.content.get('src', None)
+        clickable = event.content.get('clickable', False)
+        callback = event.content.get('callback', None)
+        
+        icon = self.icon_manager.add_icon(name, label, src, clickable)
+        if callback is not None:
+            try:
+                callback(icon)
+            except:
+                logger.debug('Error in info bar add icon callback')
+        return False
+    
+    def evt_infobar_modify_icon(self, event):
+        return False
+    
+    def evt_infobar_remove_icon(self, event):
+        name = None
+        actor = None
+        if isinstance(event.content, str):
+            name = event.content
+        else:
+            actor = event.content
+        
+        self.icon_manager.remove_icon(name, actor)
+        return False
+    
+    # allocation and preferred size
+    #-----------------------------------------------------------
+    def do_get_preferred_width(self, for_height):
+        preferred_width = self.icon_manager.get_preferred_width(for_height)[1]
+        return preferred_width, preferred_width
+    
+    def do_get_preferred_height(self, for_width):
+        preferred_height = self.icon_manager.get_preferred_height(for_width)[1]
+        return preferred_height, preferred_height
+    
     def do_allocate(self, box, flags):
         bar_width = box.x2 - box.x1
         bar_height = box.y2 - box.y1
-
-        bgbox = clutter.ActorBox(0, 0, bar_width, bar_height)
-        self.background.allocate(bgbox, flags)
-
-        available_height = bar_height / 2
-        ellipsis_width = self.ellipsis.get_preferred_width(-1)[1]
-
-        label = self.labels['top-left']
-        label_width, label_height = label.get_preferred_size()[2:]
-        label.set_ellipsize(pango.ELLIPSIZE_END)
-        if label_width <= bar_width - ellipsis_width - 10:
-            label.set_ellipsize(pango.ELLIPSIZE_NONE)
-        elif self.labels['top-right'].get_text():
-            label_width = (bar_width - 10) / 2
+        
+        icons_width = self.icon_manager.get_preferred_width(bar_height)[1]
+        label_width = bar_width - icons_width
+        
+        # Background images
+        box_bg = clutter.ActorBox()
+        box_bg.x1 = 0
+        box_bg.x2 = bar_width
+        box_bg.y1 = 0
+        box_bg.y2 = bar_height
+        self.global_bg.allocate(box_bg, flags)
+        # text_bg_left
+        box_text_left = clutter.ActorBox()
+        box_text_left.x1 = 0
+        box_text_left.x2 = self.backgrounds_width
+        box_text_left.y1 = 0
+        box_text_left.y2 = bar_height
+        self.text_bg_left.allocate(box_text_left, flags)
+        # text_bg_middle
+        box_text_middle = clutter.ActorBox()
+        box_text_middle.x1 = self.backgrounds_width
+        box_text_middle.x2 = label_width - self.backgrounds_width
+        box_text_middle.y1 = 0
+        box_text_middle.y2 = bar_height
+        self.text_bg_middle.allocate(box_text_middle, flags)
+        # text_bg_right
+        box_text_right = clutter.ActorBox()
+        box_text_right.x1 = box_text_middle.x2
+        box_text_right.x2 = box_text_middle.x2 + self.backgrounds_width
+        box_text_right.y1 = 0
+        box_text_right.y2 = bar_height
+        self.text_bg_right.allocate(box_text_right, flags)
+        
+        if icons_width > 0:
+            # icon_bg_left
+            box_icon_left = clutter.ActorBox()
+            box_icon_left.x1 = box_text_right.x2
+            box_icon_left.x2 = box_text_right.x2 + self.backgrounds_width
+            box_icon_left.y1 = 0
+            box_icon_left.y2 = bar_height
+            self.icon_bg_left.allocate(box_icon_left, flags)
+            # icon_bg_middle
+            box_icon_middle = clutter.ActorBox()
+            box_icon_middle.x1 = box_icon_left.x2
+            box_icon_middle.x2 = bar_width - self.backgrounds_width
+            box_icon_middle.y1 = 0
+            box_icon_middle.y2 = bar_height
+            self.icon_bg_middle.allocate(box_icon_middle, flags)
+            # icon_bg_right
+            box_icon_right = clutter.ActorBox()
+            box_icon_right.x1 = box_icon_middle.x2
+            box_icon_right.x2 = bar_width
+            box_icon_right.y1 = 0
+            box_icon_right.y2 = bar_height
+            self.icon_bg_right.allocate(box_icon_right, flags)
         else:
-            label_width = bar_width - 10
-        tlbox = clutter.ActorBox()
-        tlbox.x1 = 5
-        tlbox.y1 = (available_height - label_height) / 2
-        tlbox.x2 = tlbox.x1 + label_width
-        tlbox.y2 = tlbox.y1 + label_height
-        label.allocate(tlbox, flags)
-
-        label = self.labels['top-right']
-        label_width, label_height = label.get_preferred_size()[2:]
-        if label_width > bar_width - tlbox.x2 - 5:
-            label.set_ellipsize(pango.ELLIPSIZE_END)
-            label_width = bar_width - tlbox.x2 - 5
-        else:
-            label.set_ellipsize(pango.ELLIPSIZE_NONE)
-        trbox = clutter.ActorBox()
-        trbox.x2 = bar_width - 5
-        trbox.x1 = trbox.x2 - label_width
-        trbox.y1 = (available_height - label_height) / 2
-        trbox.y2 = trbox.y1 + label_height
-        label.allocate(trbox, flags)
-
-        label = self.labels['bottom-left']
-        label_width, label_height = label.get_preferred_size()[2:]
-        if label_width > bar_width - ellipsis_width - 10:
-            label.set_ellipsize(pango.ELLIPSIZE_END)
-            label_width = (bar_width - 10) / 2
-        else:
-            label.set_ellipsize(pango.ELLIPSIZE_NONE)
-        blbox = clutter.ActorBox()
-        blbox.x1 = 5
-        blbox.y1 = available_height + (available_height - label_height) / 2
-        blbox.x2 = blbox.x1 + label_width
-        blbox.y2 = blbox.y1 + label_height
-        label.allocate(blbox, flags)
-
-        label = self.labels['bottom-right']
-        label_width, label_height = label.get_preferred_size()[2:]
-        if label_width > bar_width - blbox.x2 - 5:
-            label.set_ellipsize(pango.ELLIPSIZE_END)
-            label_width = bar_width - blbox.x2 - 5
-        else:
-            label.set_ellipsize(pango.ELLIPSIZE_NONE)
-        brbox = clutter.ActorBox()
-        brbox.x2 = bar_width - 5
-        brbox.x1 = brbox.x2 - label_width
-        brbox.y1 = available_height + (available_height - label_height) / 2
-        brbox.y2 = brbox.y1 + label_height
-        label.allocate(brbox, flags)
-
-        ebox = clutter.ActorBox(5, 0, bar_width - 5, bar_height)
-        self.editable_label.allocate(ebox, flags)
-
+            box_icon_left = clutter.ActorBox(0, 0, 0, 0)
+            self.icon_bg_left.allocate(box_icon_left, flags)
+            # icon_bg_middle
+            box_icon_middle = clutter.ActorBox(0, 0, 0, 0)
+            self.icon_bg_middle.allocate(box_icon_middle, flags)
+            # icon_bg_right
+            box_icon_right = clutter.ActorBox(0, 0, 0, 0)
+            self.icon_bg_right.allocate(box_icon_right, flags)
+        
+        # Label
+        box_label = clutter.ActorBox()
+        box_label.x1 = 0
+        box_label.x2 = label_width
+        box_label.y1 = 0
+        box_label.y2 = bar_height
+        self.label.allocate(box_label, flags)
+        
+        # Icons
+        box_icons = clutter.ActorBox()
+        box_icons.x1 = label_width
+        box_icons.x2 = bar_width
+        box_icons.y1 = 0
+        box_icons.y2 = bar_height
+        self.icon_manager.allocate(box_icons, flags)
+        
         clutter.Actor.do_allocate(self, box, flags)
-
+    
+    #-----------------------------------------------------------
+    def _add(self, *children):
+        for child in children:
+            child.set_parent(self)
+            self._children.append(child)
+    
     def do_foreach(self, func, data=None):
-        children = (self.background, self.editable_label) \
-                                                  + tuple(self.labels.values())
-        for child in children:
+        for child in self._children:
             func(child, data)
-
+        
     def do_paint(self):
-        children = (self.background, self.editable_label) \
-                                                  + tuple(self.labels.values())
-        for child in children:
-            child.paint()
+        for actor in self._children:
+            actor.paint()
+    
+    def do_pick(self, color):
+        for actor in self._children:
+            actor.paint()
+    
+    def do_destroy(self):
+        self.unparent()
+        if hasattr(self, '_children'):
+            for child in self._children:
+                child.unparent()
+                child.destroy()
+            self._children = list()
 
-    #def do_pick(self, color):
-    #    self.do_paint()
+#-----------------------------------------------------------
+class IconManager(clutter.Actor, clutter.Container):
+    __gtype_name__ = 'IconManager'
+
+    def __init__(self, padding=10, spacing=5):
+        import touchwizard
+        clutter.Actor.__init__(self)
+        self._children = list()
+        self.padding = padding
+        self.spacing = spacing
+        self.icon_height = 48
+        self.icon_padding = 8
+        self.tooltip_displayed = None
+    
+    def on_tooltip_display(self, actor, displayed):
+        if displayed:
+            if self.tooltip_displayed is not None:
+                self.tooltip_displayed.display_tooltip(False)
+            self.tooltip_displayed = actor
+    
+    def add_icon(self, name, label='', icon_src=None, clickable=False):
+        icon = self.get_icon(name)
+        if icon is not None:
+            return None
+        icon = InfoIcon(name, label=label, icon_src=icon_src, clickable=clickable, icon_height=self.icon_height, padding=self.icon_padding)
+        self.add(icon)
+        return icon
+    
+    def modify_icon(self, name=None, actor=None, changes=dict()):
+        icon = self.get_icon(name, actor)
+        if icon is not None:
+            self.remove(icon)
+        return False
+    
+    def remove_icon(self, name=None, actor=None):
+        icon = self.get_icon(name, actor)
+        if icon is not None:
+            pass
+        return False
+    
+    def get_icon(self, name=None, actor=None):
+        if actor is not None and actor in self._children:
+            return actor
+        elif actor is None and name is not None:
+            for child in self._children:
+                if child.name == name:
+                    return child
+        return None
+    
+    def do_add(self, *children):
+        for child in children:
+            if child in self._children:
+                raise Exception("Actor %s is already a children of %s" % (child, self))
+            self._children.append(child)
+            child.on_tooltip_display = self.on_tooltip_display
+            child.set_parent(self)
+            self.queue_relayout()
+    
+    def do_remove(self, *children):
+        for child in children:
+            if child in self._children:
+                self._children.remove(child)
+                child.unparent()
+                self.queue_relayout()
+            else:
+                raise Exception("Actor %s is not a child of %s" % (child, self))
+    
+    def do_get_preferred_width(self, for_height):
+        if for_height != -1:
+            for_height -= 2*self.padding
+        preferred_width = 0
+        for child in self._children:
+            preferred_width += child.get_preferred_width(for_height)[1] + self.spacing
+        if preferred_width > 0:
+            preferred_width = preferred_width - self.spacing + 2*self.padding
+        return preferred_width, preferred_width
+
+    def do_get_preferred_height(self, for_width):
+        # return preferred height as a constant in order to have an infobar with a constant height
+        preferred_height = 2*self.padding + self.icon_height + 2*self.icon_padding
+        """
+        if for_width != -1:
+            for_width -= 2*self.padding
+        preferred_height = 2*self.padding
+        for child in self._children:
+            preferred_height = max(preferred_height, child.get_preferred_height(for_width - 2*self.padding)[1] + 2*self.padding)
+        """
+        return preferred_height, preferred_height
+    
+    def do_allocate(self, box, flags):
+        main_width = box.x2 - box.x1
+        main_height = box.y2 - box.y1
+        inner_height = main_height - 2*self.padding
+        
+        x = self.padding
+        for child in self._children:
+            child_box = clutter.ActorBox()
+            child_box.x1 = x
+            child_box.x2 = x + child.get_preferred_width(inner_height)[1]
+            child_box.y1 = self.padding
+            child_box.y2 = main_height - self.padding
+            child.allocate(child_box, flags)
+            x = child_box.x2 + self.spacing
+        
+        clutter.Actor.do_allocate(self, box, flags)
+    
+    def do_foreach(self, func, data=None):
+        for child in self._children:
+            func(child, data)
+        
+    def do_paint(self):
+        for actor in self._children:
+            actor.paint()
+    
+    def do_pick(self, color):
+        for actor in self._children:
+            actor.paint()
+    
+    def do_destroy(self):
+        self.unparent()
+        if hasattr(self, '_children'):
+            for child in self._children:
+                child.unparent()
+                child.destroy()
+            self._children = list()
+    
+
