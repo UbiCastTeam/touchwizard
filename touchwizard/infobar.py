@@ -2,6 +2,7 @@
 
 import os
 import sys
+import datetime
 import traceback
 import clutter
 import easyevent
@@ -19,11 +20,25 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
 
     (Should only be used via events.)
 
-    Listen for event:
+    Listen for events:
 
-      - info_message (text)
-          Display the content to the info bar. Replaces the previous displayed
-          text.
+        - infobar_connect(on_press_function)
+
+        - infobar_get_messages()
+
+        - infobar_message(text)
+          Display the content to the info bar. Replaces the previous displayed text.
+
+        - infobar_clear()
+          Clear the content of the info bar.
+
+        - infobar_add_icon(param)
+
+        - infobar_modify_icon(param)
+
+        - infobar_display_icon_tooltip(param)
+
+        - infobar_remove_icon(param)
 
     Launch no event.
     
@@ -38,7 +53,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     All images files are optionnal.
     """
     __gtype_name__ = 'InfoBar'
-    types = dict(normal='#ffffffff', error='#ff8888ff')
+    types = dict(info='#ffffffff', error='#ff8888ff', warning='#ff8888ff')
 
     def __init__(self):
         import touchwizard
@@ -50,8 +65,10 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self._type = None
         self.padding = 10
         self.spacing = 5
-        
         self.hide_id = None
+        self._connection_id = None
+        self.messages = list()
+        self.current_message_id = 0
         
         # Background images
         self.backgrounds_width = touchwizard.infobar_skin['backgrounds_width']
@@ -95,6 +112,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         
         # Events
         # text
+        self.register_event('infobar_connect')
+        self.register_event('infobar_get_messages')
         self.register_event('info_message')
         self.register_event('infobar_message')
         self.register_event('infobar_clear')
@@ -117,8 +136,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         if new_type is not None and new_type != self._type and new_type in self.types:
             self._type = new_type
             self.label.set_font_color(self.types.get(self._type, '#ffffffff'))
-        
-
+    
     @property
     def stage(self):
         if self._stage is not None:
@@ -134,6 +152,27 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     
     # text evt
     #-----------------------------------------------------------
+    def evt_infobar_connect(self, event):
+        if self._connection_id is not None:
+            self.label.disconnect(self._connection_id)
+        self._connection_id = self.label.connect('button-press-event', event.content)
+        self.label.set_reactive(True)
+    
+    def evt_infobar_get_messages(self, event):
+        callback = event.content
+        if callback is not None:
+            try:
+                callback(self.messages)
+            except Exception, e:
+                logger.error('Error in info bar get messages callback %s: %s' %(callback, e))
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                error_messages = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                for error_message in error_messages:
+                    for line in error_message.split('\n'):
+                        if line.strip():
+                            logger.error(line)
+        return False
+    
     def evt_info_message(self, event):
         self.evt_infobar_message(event)
     
@@ -145,9 +184,13 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
             event.content = dict(text=event.content)
         
         new_text = event.content.get('text')
-        new_type = event.content.get('type', 'normal')
+        new_type = event.content.get('type', 'info')
         autoclear = event.content.get('autoclear', False)
         autoclear_delay = event.content.get('autoclear_delay', 2000)
+        
+        self.current_message_id += 1
+        if new_type in self.types:
+            self.messages.append(InfoMessage(self.current_message_id, new_type, datetime.datetime.today(), new_text))
         
         self.label.set_text(new_text)
         self.set_type(new_type)
@@ -348,6 +391,14 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
                 child.unparent()
                 child.destroy()
             self._children = list()
+
+#-----------------------------------------------------------
+class InfoMessage():
+    def __init__(self, mid=None, mtype=None, mdate=None, mcontent=''):
+        self.mid = mid
+        self.mtype = mtype
+        self.mdate = mdate
+        self.mcontent = mcontent
 
 #-----------------------------------------------------------
 class IconManager(clutter.Actor, clutter.Container):
