@@ -133,13 +133,13 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     def display_tooltip(self, boolean):
         if boolean and len(self.tooltip.get_text()) > 0:
             try:
-                self.on_tooltip_display(self, False)
+                self.on_tooltip_display(self, True)
             except:
                 pass
             self._show_tooltip()
         else:
             try:
-                self.on_tooltip_display(self, True)
+                self.on_tooltip_display(self, False)
             except:
                 pass
             self._hide_tooltip()
