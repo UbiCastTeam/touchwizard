@@ -131,7 +131,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
                 logger.error('in infobar icon: Icon file %s does not exist.', status_icon_src)
     
     def display_tooltip(self, boolean):
-        if boolean:
+        if boolean and len(self.tooltip.get_text()) > 0:
             try:
                 self.on_tooltip_display(self, False)
             except:
