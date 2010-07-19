@@ -42,7 +42,9 @@ if __name__ == '__main__':
         green = InfoIcon('green_button', 'text2 alignment\nmulti')
         blue = InfoIcon('blue_button')
         
-        bar.icon_manager.add(red, green, blue)
+        bar.icon_manager.add_icon(red)
+        bar.icon_manager.add_icon(green)
+        bar.icon_manager.add_icon(blue)
         
         stage.add(rect, bar)
     
