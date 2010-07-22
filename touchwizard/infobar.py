@@ -53,7 +53,6 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     All images files are optionnal.
     """
     __gtype_name__ = 'InfoBar'
-    types = dict(info='#ffffffff', error='#ff8888ff', warning='#ff8888ff')
 
     def __init__(self):
         import touchwizard
@@ -69,6 +68,11 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self._connection_id = None
         self.messages = list()
         self.current_message_id = 0
+        self.types = dict(
+            info = touchwizard.infobar_skin['text_font_color_info'],
+            warning = touchwizard.infobar_skin['text_font_color_warning'],
+            error = touchwizard.infobar_skin['text_font_color_error'],
+        )
         
         # Background images
         self.backgrounds_width = touchwizard.infobar_skin['backgrounds_width']
@@ -97,7 +101,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         # Label
         self.label = candies2.TextContainer(rounded=False, padding=self.padding)
         self.label.set_font_name(touchwizard.infobar_skin['text_font_name'])
-        self.label.set_font_color(touchwizard.infobar_skin['text_font_color'])
+        self.label.set_font_color(self.types['info'])
         self.label.set_inner_color('#00000000')
         self.label.set_border_color('#00000000')
         self.label.set_border_width(0)

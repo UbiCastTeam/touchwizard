@@ -17,7 +17,9 @@ infobar_skin = dict(
     backgrounds_width = 20,
     
     text_font_name = '18',
-    text_font_color = '#ffffffff',
+    text_font_color_info = '#ffffffff',
+    text_font_color_warning = '#ffb162ff',
+    text_font_color_error = '#ffb4b4ff',
     
     icon_font_name = '14',
     icon_font_color = '#ffffffff',
