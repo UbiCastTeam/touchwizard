@@ -13,13 +13,22 @@ iconbar_bg = None
 scaling_ratio = 1.0
 tolerant_to_page_import_error = True
 
-infobar_skin = dict(
+infobar_params = dict(
+    messages_types = dict(
+        info = '#ffffffff',
+        warning = '#ffb162ff',
+        error = '#ffb4b4ff',
+    ),
+    messages_max = dict(
+        info = 50, # keep 100 messages of type info
+        warning = 0, # keep all messages of type warning
+        error = 0, # keep all messages of type error
+    ),
+    
+    # skin
     backgrounds_width = 20,
     
     text_font_name = '18',
-    text_font_color_info = '#ffffffff',
-    text_font_color_warning = '#ffb162ff',
-    text_font_color_error = '#ffb4b4ff',
     
     icon_font_name = '14',
     icon_font_color = '#ffffffff',

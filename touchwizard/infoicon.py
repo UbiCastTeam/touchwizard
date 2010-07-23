@@ -60,20 +60,20 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     def _apply_skin(self):
         import touchwizard
         # Apply skin
-        self.content.set_font_name(touchwizard.infobar_skin['icon_font_name'])
-        self.content.set_font_color(touchwizard.infobar_skin['icon_font_color'])
-        self.content.set_inner_color(touchwizard.infobar_skin['icon_inner_color'])
-        self.content.set_border_color(touchwizard.infobar_skin['icon_border_color'])
-        self.content.set_border_width(touchwizard.infobar_skin['icon_border_width'])
-        self.content.set_radius(touchwizard.infobar_skin['icon_radius'])
-        self.tooltip.set_font_name(touchwizard.infobar_skin['tooltip_font_name'])
-        self.tooltip.set_font_color(touchwizard.infobar_skin['tooltip_font_color'])
-        self.tooltip.set_inner_color(touchwizard.infobar_skin['tooltip_inner_color'])
-        self.tooltip.set_border_color(touchwizard.infobar_skin['tooltip_border_color'])
-        self.tooltip.set_border_width(touchwizard.infobar_skin['tooltip_border_width'])
-        self.tooltip.set_radius(touchwizard.infobar_skin['tooltip_radius'])
-        self.tooltip_x_padding = touchwizard.infobar_skin['tooltip_x_padding']
-        self.tooltip_y_padding = touchwizard.infobar_skin['tooltip_y_padding']
+        self.content.set_font_name(touchwizard.infobar_params['icon_font_name'])
+        self.content.set_font_color(touchwizard.infobar_params['icon_font_color'])
+        self.content.set_inner_color(touchwizard.infobar_params['icon_inner_color'])
+        self.content.set_border_color(touchwizard.infobar_params['icon_border_color'])
+        self.content.set_border_width(touchwizard.infobar_params['icon_border_width'])
+        self.content.set_radius(touchwizard.infobar_params['icon_radius'])
+        self.tooltip.set_font_name(touchwizard.infobar_params['tooltip_font_name'])
+        self.tooltip.set_font_color(touchwizard.infobar_params['tooltip_font_color'])
+        self.tooltip.set_inner_color(touchwizard.infobar_params['tooltip_inner_color'])
+        self.tooltip.set_border_color(touchwizard.infobar_params['tooltip_border_color'])
+        self.tooltip.set_border_width(touchwizard.infobar_params['tooltip_border_width'])
+        self.tooltip.set_radius(touchwizard.infobar_params['tooltip_radius'])
+        self.tooltip_x_padding = touchwizard.infobar_params['tooltip_x_padding']
+        self.tooltip_y_padding = touchwizard.infobar_params['tooltip_y_padding']
         
         # Images
         self.images_path = touchwizard.images_path or ''

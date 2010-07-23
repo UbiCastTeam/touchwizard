@@ -60,22 +60,20 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         easyevent.User.__init__(self)
         self._children = list()
         self.images_path = touchwizard.images_path or ''
-        self._stage = None
-        self._type = None
         self.padding = 10
         self.spacing = 5
         self.hide_id = None
         self._connection_id = None
-        self.messages = list()
         self.current_message_id = 0
-        self.types = dict(
-            info = touchwizard.infobar_skin['text_font_color_info'],
-            warning = touchwizard.infobar_skin['text_font_color_warning'],
-            error = touchwizard.infobar_skin['text_font_color_error'],
-        )
+        self.types = touchwizard.infobar_params['messages_types']
+        self._type = self.types.keys()[0]
+        self.messages = dict()
+        self.messages_max = touchwizard.infobar_params['messages_max']
+        for key in self.types.keys():
+            self.messages.update({key: list()})
         
         # Background images
-        self.backgrounds_width = touchwizard.infobar_skin['backgrounds_width']
+        self.backgrounds_width = touchwizard.infobar_params['backgrounds_width']
         self.global_bg = clutter.Texture()
         self._set_bg_image(self.global_bg, 'global_bg')
         self._add(self.global_bg)
@@ -100,8 +98,8 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         
         # Label
         self.label = candies2.TextContainer(rounded=False, padding=self.padding)
-        self.label.set_font_name(touchwizard.infobar_skin['text_font_name'])
-        self.label.set_font_color(self.types['info'])
+        self.label.set_font_name(touchwizard.infobar_params['text_font_name'])
+        self.label.set_font_color(self.types[self.types.keys()[0]])
         self.label.set_inner_color('#00000000')
         self.label.set_border_color('#00000000')
         self.label.set_border_width(0)
@@ -137,22 +135,9 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
             logger.error('in infobar: Image file for background (%s) does not exist.', image_src)
     
     def set_type(self, new_type):
-        if new_type is not None and new_type != self._type and new_type in self.types:
+        if new_type != self._type and new_type in self.types:
             self._type = new_type
             self.label.set_font_color(self.types.get(self._type, '#ffffffff'))
-    
-    @property
-    def stage(self):
-        if self._stage is not None:
-            return self._stage
-        actor = self
-        while actor.get_parent() is not None:
-            actor = actor.get_parent()
-        if isinstance(actor, clutter.Stage):
-            self._stage = actor
-            return actor
-        else:
-            return None
     
     # text evt
     #-----------------------------------------------------------
@@ -166,7 +151,10 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         callback = event.content
         if callback is not None:
             try:
-                callback(self.messages)
+                messages = list()
+                for key in self.messages.keys():
+                    messages.extend(self.messages[key])
+                callback(messages)
             except Exception, e:
                 logger.error('Error in info bar get messages callback %s: %s' %(callback, e))
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -187,15 +175,18 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         if not isinstance(event.content, dict):
             event.content = dict(text=event.content)
         
-        new_text = event.content.get('text')
+        new_text = event.content.get('text', '')
         new_type = event.content.get('type', 'info')
         autoclear = event.content.get('autoclear', False)
         autoclear_delay = event.content.get('autoclear_delay', 2000)
         
         self.current_message_id += 1
-        if new_type in self.types:
-            self.messages.append(InfoMessage(self.current_message_id, new_type, datetime.datetime.today(), new_text))
-        
+        if new_type not in self.types:
+            new_type = self._type
+        self.messages[new_type].append(InfoMessage(self.current_message_id, new_type, datetime.datetime.today(), new_text))
+        max_messages = self.messages_max.get(new_type, 0)
+        if max_messages > 0 and len(self.messages[new_type]) > max_messages:
+            self.messages[new_type].remove(self.messages[new_type][0])
         self.label.set_text(new_text)
         self.set_type(new_type)
         if autoclear:
