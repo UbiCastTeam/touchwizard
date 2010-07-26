@@ -15,14 +15,9 @@ tolerant_to_page_import_error = True
 
 infobar_params = dict(
     messages_types = dict(
-        info = '#ffffffff',
-        warning = '#ffb162ff',
-        error = '#ffb4b4ff',
-    ),
-    messages_max = dict(
-        info = 50, # keep 100 messages of type info
-        warning = 0, # keep all messages of type warning
-        error = 0, # keep all messages of type error
+        info = dict(color='#ffffffff', length=50),
+        warning = dict(color='#ffb162ff', length=0),
+        error = dict(color='#ffb4b4ff', length=0),
     ),
     
     # skin

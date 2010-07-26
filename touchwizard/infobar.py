@@ -68,7 +68,6 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self.types = touchwizard.infobar_params['messages_types']
         self._type = self.types.keys()[0]
         self.messages = dict()
-        self.messages_max = touchwizard.infobar_params['messages_max']
         for key in self.types.keys():
             self.messages.update({key: list()})
         
@@ -99,7 +98,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         # Label
         self.label = candies2.TextContainer(rounded=False, padding=self.padding)
         self.label.set_font_name(touchwizard.infobar_params['text_font_name'])
-        self.label.set_font_color(self.types[self.types.keys()[0]])
+        self.label.set_font_color(self.types[self._type].get('color', '#ffffffff'))
         self.label.set_inner_color('#00000000')
         self.label.set_border_color('#00000000')
         self.label.set_border_width(0)
@@ -137,7 +136,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     def set_type(self, new_type):
         if new_type != self._type and new_type in self.types:
             self._type = new_type
-            self.label.set_font_color(self.types.get(self._type, '#ffffffff'))
+            self.label.set_font_color(self.types[self._type].get('color', '#ffffffff'))
     
     # text evt
     #-----------------------------------------------------------
@@ -184,7 +183,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         if new_type not in self.types:
             new_type = self._type
         self.messages[new_type].append(InfoMessage(self.current_message_id, new_type, datetime.datetime.today(), new_text))
-        max_messages = self.messages_max.get(new_type, 0)
+        max_messages = self.types[new_type].get('length', 0)
         if max_messages > 0 and len(self.messages[new_type]) > max_messages:
             self.messages[new_type].remove(self.messages[new_type][0])
         self.label.set_text(new_text)
