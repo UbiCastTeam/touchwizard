@@ -211,10 +211,11 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         status = event.content.get('status', None)
         src = event.content.get('src', None)
         clickable = event.content.get('clickable', False)
+        on_click_callback = event.content.get('on_click_callback', None)
         tooltip = event.content.get('tooltip', '')
         callback = event.content.get('callback', None)
         
-        icon = self.icon_manager.add_icon(name, label, status, src, clickable, tooltip)
+        icon = self.icon_manager.add_icon(name, label, status, src, clickable, on_click_callback, tooltip)
         if callback is not None:
             try:
                 callback(icon)
@@ -414,11 +415,11 @@ class IconManager(clutter.Actor, clutter.Container):
                 self.tooltip_displayed.display_tooltip(False)
             self.tooltip_displayed = actor
     
-    def add_icon(self, name, label='', status=None, icon_src=None, clickable=False, tooltip=''):
+    def add_icon(self, name, label='', status=None, icon_src=None, clickable=False, on_click_callback=None, tooltip=''):
         icon = self.get_icon(dict(name=name))
         if icon is not None:
             return None
-        icon = InfoIcon(name, label=label, status=status, icon_src=icon_src, clickable=clickable, tooltip=tooltip, icon_height=self.icon_height, padding=self.icon_padding)
+        icon = InfoIcon(name, label=label, status=status, icon_src=icon_src, clickable=clickable, on_click_callback=on_click_callback, tooltip=tooltip, icon_height=self.icon_height, padding=self.icon_padding)
         self._add(icon, index=0)
         return icon
     
@@ -443,6 +444,8 @@ class IconManager(clutter.Actor, clutter.Container):
                 icon.set_src(params['src'])
             if 'clickable' in params:
                 icon.set_clickable(params['clickable'])
+            if 'on_click_callback' in params:
+                icon.set_on_click_callback(params['on_click_callback'])
             if 'tooltip' in params:
                 icon.set_tooltip_text(params['tooltip'])
         return False
@@ -496,13 +499,6 @@ class IconManager(clutter.Actor, clutter.Container):
     def do_get_preferred_height(self, for_width):
         # return preferred height as a constant in order to have an infobar with a constant height
         preferred_height = 2*self.padding + self.icon_height + 2*self.icon_padding
-        """
-        if for_width != -1:
-            for_width -= 2*self.padding
-        preferred_height = 2*self.padding
-        for child in self._children:
-            preferred_height = max(preferred_height, child.get_preferred_height(for_width - 2*self.padding)[1] + 2*self.padding)
-        """
         return preferred_height, preferred_height
     
     def do_allocate(self, box, flags):

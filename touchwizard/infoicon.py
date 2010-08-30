@@ -25,16 +25,18 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     __gtype_name__ = 'InfoIcon'
     STATUSES = ['UNKNOWN', 'READY', 'DISABLED', 'INFO', 'ERROR', 'WARNING']
     
-    def __init__(self, name, label='', status=None, icon_src=None, clickable=True, tooltip='', icon_height=48, padding=8):
+    def __init__(self, name, label='', status=None, icon_src=None, clickable=True, on_click_callback=None, tooltip='', icon_height=48, padding=8):
         self.name = name
         self.label_text = label
         self.icon_src = icon_src
         self.status = None
         self.on_tooltip_display = None
+        self.on_click_callback = on_click_callback
         self.images_path = ''
         
         self.tooltip = candies2.OptionLine('tooltip', tooltip, padding=6)
         self.content = IconContent(self.name, self.label_text, icon_height=icon_height, padding=padding)
+        self.content.connect('button-press-event', self._on_icon_click)
         candies2.ToolTipManager.__init__(self, tooltip_actor=self.tooltip, content_actor=self.content, h_direction='left', v_direction='bottom', clickable=clickable, long_click=False, tooltip_duration=3000, animation_duration=300, tooltip_x_padding=10, tooltip_y_padding=0)
         easyevent.User.__init__(self)
         
@@ -129,6 +131,13 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
                 self.tooltip.set_icon(status_icon_src)
             else:
                 logger.error('in infobar icon: Icon file %s does not exist.', status_icon_src)
+    
+    def set_on_click_callback(self, callback):
+        self.on_click_callback = callback
+    
+    def _on_icon_click(self, source=None, event=None):
+        if self.on_click_callback is not None:
+            self.on_click_callback(self.get_tooltip_displayed())
     
     def display_tooltip(self, boolean):
         if boolean and len(self.tooltip.get_text()) > 0:
