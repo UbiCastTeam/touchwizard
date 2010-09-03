@@ -132,20 +132,21 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     def set_tooltip_line(self, line_id, status=None, text=None, delete=False):
         line = None
         for tooltip_line in self.tooltip_lines:
-            if line.line_id == line_id:
+            if tooltip_line.line_id == line_id:
                 line = tooltip_line
                 if delete:
                     self.tooltip.remove_element('line_%s' %line_id)
                     self.tooltip_lines.remove(line)
                 break
-        if line == None and not delete:
-            if text == None:
-                text = ''
-            line = ToolTipLine(line_id, status, text, images_path=self.images_path)
-            line.set_font_name(self.tooltip_font_name)
-            line.set_font_color(self.tooltip_font_color)
-            self.tooltip.add_element(line, 'line_%s' %line_id, expand=True)
-            self.tooltip_lines.append(line)
+        if line == None:
+            if not delete:
+                if text == None:
+                    text = ''
+                line = ToolTipLine(line_id, status, text, images_path=self.images_path)
+                line.set_font_name(self.tooltip_font_name)
+                line.set_font_color(self.tooltip_font_color)
+                self.tooltip.add_element(line, 'line_%s' %line_id, expand=True)
+                self.tooltip_lines.append(line)
         else:
             if text is not None:
                 line.set_text(text)
