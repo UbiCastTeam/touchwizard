@@ -212,10 +212,10 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         src = event.content.get('src', None)
         clickable = event.content.get('clickable', False)
         on_click_callback = event.content.get('on_click_callback', None)
-        tooltip = event.content.get('tooltip', '')
+        tooltips = event.content.get('tooltips', list())
         callback = event.content.get('callback', None)
         
-        icon = self.icon_manager.add_icon(name, label, status, src, clickable, on_click_callback, tooltip)
+        icon = self.icon_manager.add_icon(name, label, status, src, clickable, on_click_callback, tooltips)
         if callback is not None:
             try:
                 callback(icon)
@@ -415,21 +415,24 @@ class IconManager(clutter.Actor, clutter.Container):
                 self.tooltip_displayed.display_tooltip(False)
             self.tooltip_displayed = actor
     
-    def add_icon(self, name, label='', status=None, icon_src=None, clickable=False, on_click_callback=None, tooltip=''):
+    def add_icon(self, name, label='', status=None, icon_src=None, clickable=False, on_click_callback=None, tooltips=list()):
         icon = self.get_icon(dict(name=name))
         if icon is not None:
             return None
-        icon = InfoIcon(name, label=label, status=status, icon_src=icon_src, clickable=clickable, on_click_callback=on_click_callback, tooltip=tooltip, icon_height=self.icon_height, padding=self.icon_padding)
+        icon = InfoIcon(name, label=label, status=status, icon_src=icon_src, clickable=clickable, on_click_callback=on_click_callback, tooltips=tooltips, icon_height=self.icon_height, padding=self.icon_padding)
         self._add(icon, index=0)
         return icon
     
     def display_icon_tooltip(self, params=dict):
         icon = self.get_icon(params)
         if icon is not None:
-            if 'text' in params:
-                icon.set_tooltip_text(params['text'])
             if 'status' in params:
                 icon.set_status(params['status'])
+            if 'tooltips' in params:
+                for tooltip in params['tooltips']:
+                    if 'id' in tooltip:
+                        icon.set_tooltip_line(tooltip['id'], tooltip.get('status', None), tooltip.get('text', None), tooltip.get('delete', False))
+                        print '------------------------ new line', tooltip['id']
             icon.display_tooltip(True)
         return False
     
@@ -446,8 +449,10 @@ class IconManager(clutter.Actor, clutter.Container):
                 icon.set_clickable(params['clickable'])
             if 'on_click_callback' in params:
                 icon.set_on_click_callback(params['on_click_callback'])
-            if 'tooltip' in params:
-                icon.set_tooltip_text(params['tooltip'])
+            if 'tooltips' in params:
+                for tooltip in params['tooltips']:
+                    if 'id' in tooltip:
+                        icon.set_tooltip_line(tooltip['id'], tooltip.get('status', None), tooltip.get('text', None), tooltip.get('delete', False))
         return False
     
     def remove_icon(self, params=dict()):

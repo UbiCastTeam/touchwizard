@@ -23,9 +23,8 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     All images files are optionnal.
     """
     __gtype_name__ = 'InfoIcon'
-    STATUSES = ['UNKNOWN', 'READY', 'DISABLED', 'INFO', 'ERROR', 'WARNING']
     
-    def __init__(self, name, label='', status=None, icon_src=None, clickable=True, on_click_callback=None, tooltip='', icon_height=48, padding=8):
+    def __init__(self, name, label='', status=None, icon_src=None, clickable=True, on_click_callback=None, tooltips=list(), icon_height=48, padding=8):
         self.name = name
         self.label_text = label
         self.icon_src = icon_src
@@ -34,7 +33,8 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         self.on_click_callback = on_click_callback
         self.images_path = ''
         
-        self.tooltip = candies2.OptionLine('tooltip', tooltip, padding=6)
+        self.tooltip = candies2.VBox(padding=6)
+        self.tooltip_lines = list()
         self.content = IconContent(self.name, self.label_text, icon_height=icon_height, padding=padding)
         self.content.connect('button-press-event', self._on_icon_click)
         candies2.ToolTipManager.__init__(self, tooltip_actor=self.tooltip, content_actor=self.content, h_direction='left', v_direction='bottom', clickable=clickable, long_click=False, tooltip_duration=3000, animation_duration=300, tooltip_x_padding=10, tooltip_y_padding=0)
@@ -43,9 +43,15 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         # Apply skin
         self._apply_skin()
         
-        self.set_status(self.STATUSES[0])
         if status is not None:
             self.set_status(status)
+        else:
+            self.set_status('unknown')
+        
+        # Add initial tooltips
+        for tooltip in tooltips:
+            if 'id' in tooltip:
+                self.set_tooltip_line(tooltip['id'], tooltip.get('status', None), tooltip.get('text', None), tooltip.get('delete', False))
         
     """
         self._build_picture()
@@ -68,12 +74,14 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         self.content.set_border_color(touchwizard.infobar_params['icon_border_color'])
         self.content.set_border_width(touchwizard.infobar_params['icon_border_width'])
         self.content.set_radius(touchwizard.infobar_params['icon_radius'])
-        self.tooltip.set_font_name(touchwizard.infobar_params['tooltip_font_name'])
-        self.tooltip.set_font_color(touchwizard.infobar_params['tooltip_font_color'])
-        self.tooltip.set_inner_color(touchwizard.infobar_params['tooltip_inner_color'])
-        self.tooltip.set_border_color(touchwizard.infobar_params['tooltip_border_color'])
-        self.tooltip.set_border_width(touchwizard.infobar_params['tooltip_border_width'])
-        self.tooltip.set_radius(touchwizard.infobar_params['tooltip_radius'])
+        tooltip_bg = candies2.RoundRectangle()
+        tooltip_bg.set_inner_color(touchwizard.infobar_params['tooltip_inner_color'])
+        tooltip_bg.set_border_color(touchwizard.infobar_params['tooltip_border_color'])
+        tooltip_bg.set_border_width(touchwizard.infobar_params['tooltip_border_width'])
+        tooltip_bg.set_radius(touchwizard.infobar_params['tooltip_radius'])
+        self.tooltip.set_background(tooltip_bg)
+        self.tooltip_font_name = touchwizard.infobar_params['tooltip_font_name']
+        self.tooltip_font_color = touchwizard.infobar_params['tooltip_font_color']
         self.tooltip_x_padding = touchwizard.infobar_params['tooltip_x_padding']
         self.tooltip_y_padding = touchwizard.infobar_params['tooltip_y_padding']
         
@@ -83,7 +91,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         tooltip_texture_src = os.path.join(self.images_path, 'infobar', 'common', 'tooltip_texture.png')
         if os.path.exists(tooltip_texture_src):
             tooltip_texture = clutter.cogl.texture_new_from_file(tooltip_texture_src)
-            self.tooltip.set_texture(tooltip_texture)
+            tooltip_bg.set_texture(tooltip_texture)
         else:
             logger.error('in infobar icon: Image file for tooltip texture (%s) does not exist.', tooltip_texture_src)
         #tooltip_pointer
@@ -101,9 +109,6 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     def set_text(self, text):
         self.content.set_text(text)
     
-    def set_tooltip_text(self, text):
-        self.tooltip.set_text(text)
-    
     def set_src(self, icon_src):
         self.icon_src = icon_src
         if self.icon_src is not None:
@@ -114,23 +119,38 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
             self.content.set_icon(used_src)
         else:
             logger.error('in infobar icon: Icon file %s does not exist.', used_src)
-        
+    
     def set_status(self, status):
-        new_status = status.upper()
-        if self.status != new_status and new_status in self.STATUSES:
+        if self.status != status:
             self.status = status
-            
-            small_status_icon_src = os.path.join(self.images_path, 'infobar', 'common', 'status_%s_small.png' %(new_status.lower()))
+            small_status_icon_src = os.path.join(self.images_path, 'infobar', 'common', 'status_%s_small.png' %status)
             if os.path.exists(small_status_icon_src):
                 self.content.set_status_icon(small_status_icon_src)
             else:
                 logger.error('in infobar icon: Icon file %s does not exist.', small_status_icon_src)
-            
-            status_icon_src = os.path.join(self.images_path, 'infobar', 'common', 'status_%s.png' %(new_status.lower()))
-            if os.path.exists(status_icon_src):
-                self.tooltip.set_icon(status_icon_src)
-            else:
-                logger.error('in infobar icon: Icon file %s does not exist.', status_icon_src)
+    
+    def set_tooltip_line(self, line_id, status=None, text=None, delete=False):
+        line = None
+        for tooltip_line in self.tooltip_lines:
+            if line.line_id == line_id:
+                line = tooltip_line
+                if delete:
+                    self.tooltip.remove_element('line_%s' %line_id)
+                    self.tooltip_lines.remove(line)
+                break
+        if line == None and not delete:
+            if text == None:
+                text = ''
+            line = ToolTipLine(line_id, status, text, images_path=self.images_path)
+            line.set_font_name(self.tooltip_font_name)
+            line.set_font_color(self.tooltip_font_color)
+            self.tooltip.add_element(line, 'line_%s' %line_id, expand=True)
+            self.tooltip_lines.append(line)
+        else:
+            if text is not None:
+                line.set_text(text)
+            if status is not None:
+                line.set_status(status)
     
     def set_on_click_callback(self, callback):
         self.on_click_callback = callback
@@ -140,7 +160,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
             self.on_click_callback(self.get_tooltip_displayed())
     
     def display_tooltip(self, boolean):
-        if boolean and len(self.tooltip.get_text()) > 0:
+        if boolean and len(self.tooltip_lines) > 0:
             try:
                 self.on_tooltip_display(self, True)
             except:
@@ -159,6 +179,27 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
             candies2.ToolTipManager.do_destroy(self)
         except:
             pass
+
+class ToolTipLine(candies2.OptionLine):
+    __gtype_name__ = 'ToolTipLine'
+    
+    def __init__(self, line_id, status, text, images_path):
+        candies2.OptionLine.__init__(self, line_id, text, padding=6, rounded=False)
+        self.images_path = images_path
+        self.line_id = line_id
+        self.set_inner_color('#00000000')
+        self.set_line_alignment('left')
+        self.set_status(status)
+    
+    def set_status(self, status):
+        self.status = status
+        if self.status:
+            status_icon_src = os.path.join(self.images_path, 'infobar', 'common', 'status_%s.png' %status)
+            if os.path.exists(status_icon_src):
+                self.set_icon(status_icon_src)
+            else:
+                logger.error('in infobar icon: Icon file %s does not exist.', status_icon_src)
+
 
 
 class IconContent(candies2.OptionLine):
