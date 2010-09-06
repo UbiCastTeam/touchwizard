@@ -19,9 +19,10 @@ class IconRef(object):
     """
     
     def __init__(self, icon, label=None, is_locked=None, is_on=False,
-                                                cooldown=None, condition=True):
+                                                cooldown=None, condition=True, glow_animation=False):
         self.icon = icon
         self.label = label
+        self.glow_animation = glow_animation
         self.is_locked = is_locked
         self.is_on = is_on
         self.cooldown = cooldown
@@ -37,6 +38,8 @@ class IconRef(object):
             icon.is_on = self.is_on
         if self.cooldown is not None:
             icon.cooldown_ms = self.cooldown
+        if self.glow_animation is not None:
+            icon.glow_animation = self.glow_animation
         return icon
 
 
@@ -89,6 +92,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.is_locked = False
         self.is_on = False
         self.picture = None
+        self.glow_animation = None
         self.picture_on = None
         self.picture_off = None
         self.__is_built = False
@@ -136,6 +140,20 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.animation = \
                         clutter.BehaviourScale(1.1, 1.1, 1.0, 1.0, alpha=alpha)
         self.animation.apply(self.picture)
+
+        if self.glow_animation:
+            self.anim_timeline = clutter.Timeline(1000)
+            self.anim_timeline.connect('completed', self._on_anim_finish)
+            anim_alpha = clutter.Alpha(self.anim_timeline, clutter.EASE_IN_OUT_SINE)
+            self.animation_effect = \
+                            clutter.BehaviourOpacity(70, 255, alpha=anim_alpha)
+            self.anim_timeline.set_loop(True)
+            self.animation_effect.apply(self.picture)
+
+    def _on_anim_finish(self, timeline):
+        current_direction = timeline.get_direction()
+        new_direction = not current_direction
+        timeline.set_direction(new_direction)
 
     def update_text(self):
         if self.is_toggle():
@@ -289,6 +307,12 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     
     def animate(self):
         self.timeline.start()
+        if self.glow_animation:
+            if self.is_on:
+                self.anim_timeline.start()
+            else:
+                self.anim_timeline.stop()
+
     
     def toggle(self, new_state=None):
         if self.is_toggle():
