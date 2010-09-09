@@ -432,7 +432,6 @@ class IconManager(clutter.Actor, clutter.Container):
                 for tooltip in params['tooltips']:
                     if 'id' in tooltip:
                         icon.set_tooltip_line(tooltip['id'], tooltip.get('status', None), tooltip.get('text', None), tooltip.get('delete', False))
-                        print '------------------------ new line', tooltip['id']
             icon.display_tooltip(True)
         return False
     
