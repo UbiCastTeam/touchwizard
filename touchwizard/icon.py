@@ -95,6 +95,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.glow_animation = None
         self.picture_on = None
         self.picture_off = None
+        self._animate_timeout_id = None
         self.__is_built = False
     
     def build(self):
@@ -289,23 +290,24 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             if isinstance(event.content, dict):
                 what_to_do = event.content['action']
                 new_state = event.content['state']
-        actions = (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY)
-        if self.is_locked:
-            actions = (self.ACTION_ANIMATE_ONLY, )
-        if what_to_do in actions:
-            self.toggle(new_state)
-            self.animate()
-        actions = (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_OPERATE_ONLY)
+        actions = [self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY]
         if what_to_do in actions:
             if not self.is_locked:
                 self.lock_for(self.cooldown_ms)
                 self.launch_event(self.event_type, self.is_on)
+                self.toggle(new_state)
+                self._animate_timeout_id = gobject.timeout_add(10, self.animate)
             else:
                 if self.cooldown_ms >= 1000:
-                    self.launch_event('info_message',
+                    self.launch_event('infobar_message',
                            'Please wait %d seconds' %(self.cooldown_ms / 1000))
+                if what_to_do == self.ACTION_ANIMATE_ONLY:
+                    self.toggle(new_state)
+                    self.animate()
     
     def animate(self):
+        if self._animate_timeout_id is not None:
+            gobject.source_remove(self._animate_timeout_id)
         self.timeline.start()
         if self.glow_animation:
             if self.is_on:

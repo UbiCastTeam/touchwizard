@@ -68,6 +68,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.loading = LoadingWidget()
         self.loading.set_parent(self)
         self.loading.hide()
+        self.loading_padding = 10
 
         self.home_icon = touchwizard.Icon('shutdown')
         self.home_icon.build()
@@ -273,14 +274,18 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         iconbar_box.y2 = canvas_height
         self.iconbar.allocate(iconbar_box, flags)
         
+        loading_box = clutter.ActorBox()
+        loading_box.x1 = self.loading_padding
+        loading_box.y1 = infobar_height + self.loading_padding
+        loading_box.x2 = canvas_width - self.loading_padding
+        loading_box.y2 = canvas_height - iconbar_height - self.loading_padding
+        self.loading.allocate(loading_box, flags)
+
         panel_box = clutter.ActorBox()
         panel_box.x1 = 0
         panel_box.y1 = infobar_height
         panel_box.x2 = canvas_width
         panel_box.y2 = canvas_height - iconbar_height
-
-        self.loading.allocate(panel_box, flags)
-
         if self.background is not None:
             self.background.allocate(panel_box, flags)
         if self.current_page is not None:
