@@ -220,7 +220,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.current_page.panel.hide()
         self.current_page.panel.unparent()
         if not self.current_page.reuse:
-            self.current_page.panel.destroy()
+            gobject.idle_add(self.current_page.panel.destroy)
         if previous.need_loading:
             self.loading.show()
         gobject.idle_add(self.display_page, previous, icons)
