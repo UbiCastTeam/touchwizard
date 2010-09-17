@@ -218,7 +218,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             return
         logger.info('Back to %r page.', previous.name)
         self.current_page.panel.hide()
-        self.current_page.panel.unparent()
+        gobject.idle_add(self.current_page.panel.unparent)
         if not self.current_page.reuse:
             gobject.idle_add(self.current_page.panel.destroy)
         if previous.need_loading:
