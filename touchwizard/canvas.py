@@ -207,7 +207,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.register_event('next_page')
     
     def evt_previous_page(self, event):
-        gobject.idle_add(self.do_previous_page, event)
+        gobject.timeout_add(300, self.do_previous_page, event)
 
     def do_previous_page(self, event):
         try:
