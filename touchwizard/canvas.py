@@ -51,6 +51,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         
         self.background = None
         self.last_page_name = None
+        self.previous_page_locked = False
 
         if touchwizard.canvas_bg:
             if not os.path.exists(touchwizard.canvas_bg):
@@ -207,7 +208,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.register_event('next_page')
     
     def evt_previous_page(self, event):
-        gobject.timeout_add(300, self.do_previous_page, event)
+        if not self.previous_page_locked:
+            self.previous_page_locked = True
+            gobject.timeout_add(300, self.do_previous_page, event)
 
     def do_previous_page(self, event):
         try:
@@ -224,6 +227,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         if previous.need_loading:
             self.loading.show()
         gobject.idle_add(self.display_page, previous, icons)
+        self.previous_page_locked = False
     
     def evt_request_quit(self, event):
         self.evt_request_quit = self.evt_request_quit_fake
