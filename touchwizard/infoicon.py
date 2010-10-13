@@ -226,16 +226,16 @@ class IconContent(candies2.OptionLine):
     
     def do_get_preferred_width(self, for_height):
         if for_height != -1:
-            for_height -= 2*self.padding
+            for_height -= 2*self._padding.y
         if len(self.label.get_text()) > 0:
-            preferred_width = self.icon_height + 2*self.padding + self.spacing
+            preferred_width = self.icon_height + 2*self._padding.x + self._spacing.x
             preferred_width += self.label.get_preferred_width(for_height)[1]
         else:
-            preferred_width = self.icon_height + 2*self.padding
+            preferred_width = self.icon_height + 2*self._padding.x
         return preferred_width, preferred_width
     
     def do_get_preferred_height(self, for_width):
-        preferred_height = self.icon_height + 2*self.padding
+        preferred_height = self.icon_height + 2*self._padding.y
         return preferred_height, preferred_height
     
     def do_allocate(self, box, flags):
@@ -253,9 +253,9 @@ class IconContent(candies2.OptionLine):
         # icon
         icon_y_padding = int(float(main_height - self.icon_height)/2.0)
         icon_box = clutter.ActorBox()
-        icon_box.x1 = self.padding
+        icon_box.x1 = self._padding.x
         icon_box.y1 = icon_y_padding
-        icon_box.x2 = self.padding + self.icon_height
+        icon_box.x2 = self._padding.x + self.icon_height
         icon_box.y2 = icon_box.y1 + self.icon_height
         self.icon.allocate(icon_box, flags)
         
@@ -264,10 +264,10 @@ class IconContent(candies2.OptionLine):
         
         # label
         label_box = clutter.ActorBox()
-        label_box.x1 = icon_box.x2 + self.spacing
-        label_box.y1 = self.padding
-        label_box.x2 = main_width - self.padding
-        label_box.y2 = main_height - self.padding
+        label_box.x1 = icon_box.x2 + self._spacing.x
+        label_box.y1 = self._padding.y
+        label_box.x2 = main_width - self._padding.x
+        label_box.y2 = main_height - self._padding.y
         self.label.allocate(label_box, flags)
         
         clutter.Actor.do_allocate(self, box, flags)
