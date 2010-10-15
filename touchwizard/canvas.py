@@ -52,6 +52,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.background = None
         self.last_page_name = None
         self.previous_page_locked = False
+        self.previous_page_timeout_id = None
 
         if touchwizard.canvas_bg:
             if not os.path.exists(touchwizard.canvas_bg):
@@ -143,6 +144,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         if hasattr(self.current_page.panel, 'prepare') and callable(self.current_page.panel.prepare):
             self.current_page.panel.prepare()
         self.current_page.panel.show()
+        self.previous_page_locked = False
     
     def _build_iconbar(self, icons):
         import touchwizard
@@ -210,7 +212,9 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     def evt_previous_page(self, event):
         if not self.previous_page_locked:
             self.previous_page_locked = True
-            gobject.timeout_add(300, self.do_previous_page, event)
+            if self.previous_page_timeout_id is not None:
+                gobject.source_remove(self.previous_page_timeout_id)
+            self.previous_page_timeout_id = gobject.timeout_add(300, self.do_previous_page, event)
 
     def do_previous_page(self, event):
         try:
@@ -222,12 +226,11 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         logger.info('Back to %r page.', previous.name)
         self.current_page.panel.hide()
         gobject.idle_add(self.current_page.panel.unparent)
-        if not self.current_page.reuse:
-            gobject.idle_add(self.current_page.panel.destroy)
         if previous.need_loading:
             self.loading.show()
+        if not self.current_page.reuse:
+            gobject.idle_add(self.current_page.panel.destroy)
         gobject.idle_add(self.display_page, previous, icons)
-        self.previous_page_locked = False
     
     def evt_request_quit(self, event):
         self.evt_request_quit = self.evt_request_quit_fake
