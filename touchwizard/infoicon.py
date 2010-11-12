@@ -24,7 +24,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     """
     __gtype_name__ = 'InfoIcon'
     
-    def __init__(self, name, label='', status=None, icon_src=None, clickable=True, on_click_callback=None, tooltips=list(), icon_height=48, padding=8):
+    def __init__(self, name, label='', status=None, icon_src=None, custom_actor=None, clickable=True, on_click_callback=None, tooltips=list(), icon_height=48, padding=8):
         self.name = name
         self.label_text = label
         self.icon_src = icon_src
@@ -37,7 +37,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         self.tooltip.connect('button-release-event', self._on_tooltip_click)
         self.tooltip.set_reactive(True)
         self.tooltip_lines = list()
-        self.content = IconContent(self.name, self.label_text, icon_height=icon_height, padding=padding)
+        self.content = IconContent(self.name, self.label_text, icon_height=icon_height, custom_actor=custom_actor, padding=padding)
         self.content.connect('button-release-event', self._on_icon_click)
         candies2.ToolTipManager.__init__(self, tooltip_actor=self.tooltip, content_actor=self.content, h_direction='left', v_direction='bottom', clickable=clickable, long_click=False, tooltip_duration=3000, animation_duration=300, tooltip_x_padding=10, tooltip_y_padding=0)
         easyevent.User.__init__(self)
@@ -207,22 +207,115 @@ class ToolTipLine(candies2.OptionLine):
                 logger.error('in infobar icon: Icon file %s does not exist.', status_icon_src)
 
 
-
-class IconContent(candies2.OptionLine):
+class IconContent(candies2.BaseContainer):
     __gtype_name__ = 'IconContent'
     
-    def __init__(self, name, text, icon_height=48, icon_path=None, padding=8, spacing=8):
-        candies2.OptionLine.__init__(self, name, text, icon_height=icon_height, icon_path=icon_path, padding=padding, spacing=spacing, texture=None)
+    def __init__(self, name, text, icon_height=32, custom_actor=None, icon_path=None, padding=8, spacing=8, texture=None):
+        candies2.BaseContainer.__init__(self)
+        self._padding = candies2.Padding(padding)
+        self._spacing = candies2.Spacing(spacing)
+        self.name = name
+        
+        self.font = '14'
+        self.font_color = 'Black'
+        self.default_color = 'LightGray'
+        self.default_border_color = 'Gray'
+        
+        # background
+        self.background = candies2.RoundRectangle(texture=texture)
+        self.background.set_color(self.default_color)
+        self.background.set_border_color(self.default_border_color)
+        self.background.set_border_width(3)
+        self.background.set_radius(10)
+        self._add(self.background)
+        # icon
+        self.icon_height = icon_height
+        self.icon_path = icon_path
+        self.icon = clutter.Texture()
+        if icon_path:
+            self.icon.set_from_file(icon_path)
+        else:
+            self.icon.hide()
+        self._add(self.icon)
+        # status icon
         self.status_icon = clutter.Texture()
         self.status_icon.hide()
         self._add(self.status_icon)
-        
+        # custom_actor
+        self.custom_actor = custom_actor
+        if custom_actor:
+            self._add(custom_actor)
+            self.icon.hide()
+        # label
+        self.label = candies2.TextContainer(text, padding=0, rounded=False)
+        self.label.set_font_color(self.font_color)
+        self.label.set_font_name(self.font)
+        self.label.set_inner_color('#00000000')
+        self.label.set_border_color('#00000000')
+        self._add(self.label)
+    
+    def get_text(self):
+        return self.label.get_text()
+    
+    def set_texture(self, texture):
+        self.background.set_texture(texture)
+    
+    def set_line_wrap(self, boolean):
+        self.label.set_line_wrap(boolean)
+            
+    def set_line_alignment(self, alignment):
+        self.label.set_line_alignment(alignment)
+    
+    def set_justify(self, boolean):
+        self.label.set_justify(boolean)
+    
+    def set_text(self, text):
+        self.label.set_text(text)
+    
+    def set_name(self, text):
+        self.name = text
+    
+    def set_hname(self, text):
+        self.label.set_text(text)
+    
+    def has_icon(self):
+        if self.icon_path is not None:
+            return True
+        else:
+            return False
+    
+    def set_icon(self, new_icon_path=None):
+        self.icon_path = new_icon_path
+        if new_icon_path:
+            self.icon.set_from_file(new_icon_path)
+            self.icon.show()
+        else:
+            self.icon.hide()
+    
     def set_status_icon(self, icon_src=None):
         if icon_src:
             self.status_icon.set_from_file(icon_src)
             self.status_icon.show()
         else:
             self.status_icon.hide()
+    
+    def set_font_color(self, color):
+        self.label.set_font_color(color)
+    
+    def set_font_name(self, font_name):
+        self.label.set_font_name(font_name)
+    
+    def set_inner_color(self, color):
+        self.background.set_color(color)
+    
+    def set_border_color(self, color):
+        self.background.set_border_color(color)
+    
+    def set_radius(self, radius):
+        self.background.set_radius(radius)
+    
+    def set_border_width(self, width):
+        self.background.set_border_width(width)
     
     def do_get_preferred_width(self, for_height):
         if for_height != -1:
@@ -257,7 +350,10 @@ class IconContent(candies2.OptionLine):
         icon_box.y1 = icon_y_padding
         icon_box.x2 = self._padding.x + self.icon_height
         icon_box.y2 = icon_box.y1 + self.icon_height
-        self.icon.allocate(icon_box, flags)
+        if self.custom_actor is not None:
+            self.custom_actor.allocate(icon_box, flags)
+        else:
+            self.icon.allocate(icon_box, flags)
         
         # status icon
         self.status_icon.allocate(icon_box, flags)
@@ -271,5 +367,8 @@ class IconContent(candies2.OptionLine):
         self.label.allocate(label_box, flags)
         
         clutter.Actor.do_allocate(self, box, flags)
+    
+    def do_pick(self, color):
+        clutter.Actor.do_pick(self, color)
 
 
