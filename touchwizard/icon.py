@@ -293,9 +293,15 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         #self.back.allocate(clutter.ActorBox(0, 0, icon_width, icon_height), flags)
         clutter.Actor.do_allocate(self, box, flags)
 
-    def action(self, source=None, event=None):
+    def action(self, event=None, source=None):
         what_to_do = self.ACTION_ANIMATE_AND_OPERATE
         new_state = None
+        if event is not None and hasattr(event, 'content') and event.content is not None:
+            what_to_do = event.content
+            if isinstance(event.content, dict):
+                what_to_do = event.content['action']
+                new_state = event.content['state']
+        
         actions = (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY)
         if self.is_locked:
             actions = (self.ACTION_ANIMATE_ONLY, )
