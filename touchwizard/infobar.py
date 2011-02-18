@@ -96,7 +96,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         self._add(self.icon_bg_right)
         
         # Label
-        self.label = candies2.TextContainer(rounded=False, padding=self.padding)
+        self.label = candies2.TextContainer(rounded=False, padding=(self.padding, 0))
         self.label.set_font_name(touchwizard.infobar_params['text_font_name'])
         self.label.set_font_color(self.types[self._type].get('color', '#ffffffff'))
         self.label.set_inner_color('#00000000')
