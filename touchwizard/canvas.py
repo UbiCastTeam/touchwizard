@@ -312,10 +312,10 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     def do_paint(self):
         if self.background:
             self.background.paint()
-        self.infobar.paint()
         self.iconbar.paint()
         if self.current_page:
             self.current_page.panel.paint()
+        self.infobar.paint()
         self.loading.paint()
     
     def do_pick(self, color):
