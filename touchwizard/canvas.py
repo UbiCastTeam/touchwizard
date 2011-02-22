@@ -303,21 +303,20 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     def do_foreach(self, func, data=None):
         children = [self.infobar, self.iconbar, self.loading]
         if self.background:
-            children.insert(0, self.background)
-        if self.current_page is not None:
+            children.append(self.background)
+        if self.current_page:
             children.append(self.current_page.panel)
         for child in children:
             func(child, data)
     
     def do_paint(self):
-        children = [self.infobar, self.iconbar]
-        if self.current_page is not None:
-            children.insert(0, self.current_page.panel)
         if self.background:
-            children.insert(0, self.background)
-        children.append(self.loading)
-        for child in children:
-            child.paint()
+            self.background.paint()
+        self.infobar.paint()
+        self.iconbar.paint()
+        if self.current_page:
+            self.current_page.panel.paint()
+        self.loading.paint()
     
     def do_pick(self, color):
         self.do_paint()
