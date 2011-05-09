@@ -73,43 +73,43 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         
         # Background images
         self.backgrounds_width = touchwizard.infobar_params['backgrounds_width']
-        self.global_bg = clutter.Texture()
-        self._set_bg_image(self.global_bg, 'global_bg')
-        self._add(self.global_bg)
-        self.text_bg_left = clutter.Texture()
-        self._set_bg_image(self.text_bg_left, 'text_bg_image_left')
-        self._add(self.text_bg_left)
-        self.text_bg_middle = clutter.Texture()
-        self._set_bg_image(self.text_bg_middle, 'text_bg_image_middle')
-        self._add(self.text_bg_middle)
-        self.text_bg_right = clutter.Texture()
-        self._set_bg_image(self.text_bg_right, 'text_bg_image_right')
-        self._add(self.text_bg_right)
-        self.icon_bg_left = clutter.Texture()
-        self._set_bg_image(self.icon_bg_left, 'icon_bg_image_left')
-        self._add(self.icon_bg_left)
-        self.icon_bg_middle = clutter.Texture()
-        self._set_bg_image(self.icon_bg_middle, 'icon_bg_image_middle')
-        self._add(self.icon_bg_middle)
-        self.icon_bg_right = clutter.Texture()
-        self._set_bg_image(self.icon_bg_right, 'icon_bg_image_right')
-        self._add(self.icon_bg_right)
+        self._global_bg = clutter.Texture()
+        self._set_bg_image(self._global_bg, 'global_bg')
+        self._add(self._global_bg)
+        self._text_bg_left = clutter.Texture()
+        self._set_bg_image(self._text_bg_left, 'text_bg_image_left')
+        self._add(self._text_bg_left)
+        self._text_bg_middle = clutter.Texture()
+        self._set_bg_image(self._text_bg_middle, 'text_bg_image_middle')
+        self._add(self._text_bg_middle)
+        self._text_bg_right = clutter.Texture()
+        self._set_bg_image(self._text_bg_right, 'text_bg_image_right')
+        self._add(self._text_bg_right)
+        self._icon_bg_left = clutter.Texture()
+        self._set_bg_image(self._icon_bg_left, 'icon_bg_image_left')
+        self._add(self._icon_bg_left)
+        self._icon_bg_middle = clutter.Texture()
+        self._set_bg_image(self._icon_bg_middle, 'icon_bg_image_middle')
+        self._add(self._icon_bg_middle)
+        self._icon_bg_right = clutter.Texture()
+        self._set_bg_image(self._icon_bg_right, 'icon_bg_image_right')
+        self._add(self._icon_bg_right)
         
         # Label
-        self.label = candies2.TextContainer(rounded=False, padding=(self.padding, 0))
-        self.label.set_font_name(touchwizard.infobar_params['text_font_name'])
-        self.label.set_font_color(self.types[self._type].get('color', '#ffffffff'))
-        self.label.set_inner_color('#00000000')
-        self.label.set_border_color('#00000000')
-        self.label.set_border_width(0)
-        self.label.set_radius(0)
-        self.label.set_line_alignment('center')
-        self.label.set_line_wrap(True)
-        self._add(self.label)
+        self._label = candies2.TextContainer(rounded=False, padding=(self.padding, 0))
+        self._label.set_font_name(touchwizard.infobar_params['text_font_name'])
+        self._label.set_font_color(self.types[self._type].get('color', '#ffffffff'))
+        self._label.set_inner_color('#00000000')
+        self._label.set_border_color('#00000000')
+        self._label.set_border_width(0)
+        self._label.set_radius(0)
+        self._label.set_line_alignment('center')
+        self._label.set_line_wrap(True)
+        self._add(self._label)
         
         # Icons
-        self.icon_manager = IconManager(padding=self.padding, spacing=self.spacing)
-        self._add(self.icon_manager)
+        self._icon_manager = IconManager(padding=self.padding, spacing=self.spacing)
+        self._add(self._icon_manager)
         
         # Events
         # text
@@ -136,15 +136,17 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
     def set_type(self, new_type):
         if new_type != self._type and new_type in self.types:
             self._type = new_type
-            self.label.set_font_color(self.types[self._type].get('color', '#ffffffff'))
+            self._label.set_font_color(self.types[self._type].get('color', '#ffffffff'))
     
     # text evt
     #-----------------------------------------------------------
     def evt_infobar_connect(self, event):
         if self._connection_id is not None:
-            self.label.disconnect(self._connection_id)
-        self._connection_id = self.label.connect('button-press-event', event.content)
-        self.label.set_reactive(True)
+            self._label.disconnect(self._connection_id)
+        else:
+            candies2.LongClick(self._label)
+        self._connection_id = self._label.connect('long-press-event', event.content)
+        self._label.set_reactive(True)
     
     def evt_infobar_get_messages(self, event):
         callback = event.content
@@ -186,14 +188,14 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         max_messages = self.types[new_type].get('length', 0)
         if max_messages > 0 and len(self.messages[new_type]) > max_messages:
             self.messages[new_type].remove(self.messages[new_type][0])
-        self.label.set_text(new_text)
+        self._label.set_text(new_text)
         self.set_type(new_type)
         if autoclear:
             self.hide_id = gobject.timeout_add(autoclear_delay, self.evt_infobar_clear)
         return False
     
     def evt_infobar_clear(self, event=None):
-        self.label.set_text('')
+        self._label.set_text('')
         if self.hide_id is not None:
             gobject.source_remove(self.hide_id)
             self.hide_id = None
@@ -216,7 +218,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         tooltips = event.content.get('tooltips', list())
         callback = event.content.get('callback', None)
         
-        icon = self.icon_manager.add_icon(name, label, status, src, custom_actor, clickable, on_click_callback, tooltips)
+        icon = self._icon_manager.add_icon(name, label, status, src, custom_actor, clickable, on_click_callback, tooltips)
         if callback is not None:
             try:
                 callback(icon)
@@ -239,7 +241,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
             else:
                 event.content = dict(actor=event.content)
         
-        self.icon_manager.modify_icon(event.content)
+        self._icon_manager.modify_icon(event.content)
         return False
     
     def evt_infobar_display_icon_tooltip(self, event):
@@ -251,7 +253,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
             else:
                 event.content = dict(actor=event.content)
         
-        self.icon_manager.display_icon_tooltip(event.content)
+        self._icon_manager.display_icon_tooltip(event.content)
         return False
     
     def evt_infobar_remove_icon(self, event):
@@ -263,24 +265,24 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
             else:
                 event.content = dict(actor=event.content)
         
-        self.icon_manager.remove_icon(event.content)
+        self._icon_manager.remove_icon(event.content)
         return False
     
     # allocation and preferred size
     #-----------------------------------------------------------
     def do_get_preferred_width(self, for_height):
-        preferred_width = self.icon_manager.get_preferred_width(for_height)[1]
+        preferred_width = self._icon_manager.get_preferred_width(for_height)[1]
         return preferred_width, preferred_width
     
     def do_get_preferred_height(self, for_width):
-        preferred_height = self.icon_manager.get_preferred_height(for_width)[1]
+        preferred_height = self._icon_manager.get_preferred_height(for_width)[1]
         return preferred_height, preferred_height
     
     def do_allocate(self, box, flags):
         bar_width = box.x2 - box.x1
         bar_height = box.y2 - box.y1
         
-        icons_width = self.icon_manager.get_preferred_width(bar_height)[1]
+        icons_width = self._icon_manager.get_preferred_width(bar_height)[1]
         label_width = bar_width - icons_width
         
         # Background images
@@ -289,28 +291,28 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         box_bg.x2 = bar_width
         box_bg.y1 = 0
         box_bg.y2 = bar_height
-        self.global_bg.allocate(box_bg, flags)
+        self._global_bg.allocate(box_bg, flags)
         # text_bg_left
         box_text_left = clutter.ActorBox()
         box_text_left.x1 = 0
         box_text_left.x2 = self.backgrounds_width
         box_text_left.y1 = 0
         box_text_left.y2 = bar_height
-        self.text_bg_left.allocate(box_text_left, flags)
+        self._text_bg_left.allocate(box_text_left, flags)
         # text_bg_middle
         box_text_middle = clutter.ActorBox()
         box_text_middle.x1 = self.backgrounds_width
         box_text_middle.x2 = label_width - self.backgrounds_width
         box_text_middle.y1 = 0
         box_text_middle.y2 = bar_height
-        self.text_bg_middle.allocate(box_text_middle, flags)
+        self._text_bg_middle.allocate(box_text_middle, flags)
         # text_bg_right
         box_text_right = clutter.ActorBox()
         box_text_right.x1 = box_text_middle.x2
         box_text_right.x2 = box_text_middle.x2 + self.backgrounds_width
         box_text_right.y1 = 0
         box_text_right.y2 = bar_height
-        self.text_bg_right.allocate(box_text_right, flags)
+        self._text_bg_right.allocate(box_text_right, flags)
         
         if icons_width > 0:
             # icon_bg_left
@@ -319,30 +321,30 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
             box_icon_left.x2 = box_text_right.x2 + self.backgrounds_width
             box_icon_left.y1 = 0
             box_icon_left.y2 = bar_height
-            self.icon_bg_left.allocate(box_icon_left, flags)
+            self._icon_bg_left.allocate(box_icon_left, flags)
             # icon_bg_middle
             box_icon_middle = clutter.ActorBox()
             box_icon_middle.x1 = box_icon_left.x2
             box_icon_middle.x2 = bar_width - self.backgrounds_width
             box_icon_middle.y1 = 0
             box_icon_middle.y2 = bar_height
-            self.icon_bg_middle.allocate(box_icon_middle, flags)
+            self._icon_bg_middle.allocate(box_icon_middle, flags)
             # icon_bg_right
             box_icon_right = clutter.ActorBox()
             box_icon_right.x1 = box_icon_middle.x2
             box_icon_right.x2 = bar_width
             box_icon_right.y1 = 0
             box_icon_right.y2 = bar_height
-            self.icon_bg_right.allocate(box_icon_right, flags)
+            self._icon_bg_right.allocate(box_icon_right, flags)
         else:
             box_icon_left = clutter.ActorBox(0, 0, 0, 0)
-            self.icon_bg_left.allocate(box_icon_left, flags)
+            self._icon_bg_left.allocate(box_icon_left, flags)
             # icon_bg_middle
             box_icon_middle = clutter.ActorBox(0, 0, 0, 0)
-            self.icon_bg_middle.allocate(box_icon_middle, flags)
+            self._icon_bg_middle.allocate(box_icon_middle, flags)
             # icon_bg_right
             box_icon_right = clutter.ActorBox(0, 0, 0, 0)
-            self.icon_bg_right.allocate(box_icon_right, flags)
+            self._icon_bg_right.allocate(box_icon_right, flags)
         
         # Label
         box_label = clutter.ActorBox()
@@ -350,7 +352,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         box_label.x2 = label_width
         box_label.y1 = 0
         box_label.y2 = bar_height
-        self.label.allocate(box_label, flags)
+        self._label.allocate(box_label, flags)
         
         # Icons
         box_icons = clutter.ActorBox()
@@ -358,7 +360,7 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         box_icons.x2 = bar_width
         box_icons.y1 = 0
         box_icons.y2 = bar_height
-        self.icon_manager.allocate(box_icons, flags)
+        self._icon_manager.allocate(box_icons, flags)
         
         clutter.Actor.do_allocate(self, box, flags)
     
