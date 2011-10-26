@@ -111,15 +111,15 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
         return min_width, nat_width
     
     def do_get_preferred_height(self, for_width):
-        min_height = nat_height = 0
-        
-        for icon in self._all_icons:
-            min_icon, nat_icon = icon.get_preferred_height(-1)
-            min_height = max(min_height, min_icon)
-            nat_height = max(nat_height, nat_icon)
-        
         if isinstance(self.background, clutter.Texture):
-            nat_height = self.background.get_preferred_height(for_width)[1]
+            min_height = nat_height = self.background.get_preferred_height(-1)[1]
+        else:
+            min_height = nat_height = 0
+            for icon in self._all_icons:
+                min_icon, nat_icon = icon.get_preferred_height(-1)
+                min_height = max(min_height, min_icon)
+                nat_height = max(nat_height, nat_icon)
+        
         return min_height, nat_height
     
     def do_allocate(self, box, flags):
