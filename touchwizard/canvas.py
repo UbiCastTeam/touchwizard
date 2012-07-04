@@ -24,19 +24,15 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
           expected. If the history is empty, quit the wizard.
     
       - request_quit
-          Request for quitting the wizard. Send a prepare_quit event to
-          notify other components about the quit request and there launch the
-          wizard_quit which should be handled by the user main script.
+          Request for quitting the wizard. Call prepare_quit callback
+          if it exists and there launch the wizard_quit which should
+          be handled by the user main script.
     
     Launch the event:
     
-      - prepare_quit
-          Sent when a quit request is received by the canvas to notify the
-          other component that the wizard is quitting.
-    
       - wizard_quit
-          Sent after prepare_quit to notify the main script that it can end
-          the process.
+          Sent after prepare_quit callback to notify the main script that it
+          can end the process.
     """
     __gtype_name__ = 'Canvas'
     #infobar_height = 104
@@ -235,7 +231,16 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     def evt_request_quit(self, event):
         self.evt_request_quit = self.evt_request_quit_fake
         logger.info('Quit requested.')
-        self.launch_event('prepare_quit')
+        try:
+            prepare_quit = getattr(self.current_page, "prepare_quit", None)
+            if prepare_quit:
+                if not callable(prepare_quit):
+                    prepare_quit = getattr(self.current_page.panel, prepare_quit, None)
+                if callable(prepare_quit):
+                    logger.info('prepare_quit callback found')
+                    prepare_quit()
+        except Exception:
+            pass
         self.launch_event('wizard_quit')
     
     def evt_request_quit_fake(self, event):

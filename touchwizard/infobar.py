@@ -391,8 +391,10 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
             self._children = list()
 
 #-----------------------------------------------------------
-class InfoMessage():
+class InfoMessage(object):
+    
     def __init__(self, mid=None, mtype=None, mdate=None, mcontent=''):
+        object.__init__(self)
         self.mid = mid
         self.mtype = mtype
         self.mdate = mdate
