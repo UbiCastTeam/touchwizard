@@ -24,7 +24,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
     """
     __gtype_name__ = 'InfoIcon'
     
-    def __init__(self, name, label='', status=None, icon_src=None, custom_actor=None, clickable=True, on_click_callback=None, tooltips=list(), icon_height=48, padding=8):
+    def __init__(self, name, label='', status=None, icon_src=None, icon_size=(48, 48), custom_actor=None, clickable=True, on_click_callback=None, tooltips=list(), padding=8):
         self.name = name
         self.label_text = label
         self.icon_src = icon_src
@@ -37,7 +37,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         self.tooltip.connect('button-release-event', self._on_tooltip_click)
         self.tooltip.set_reactive(True)
         self.tooltip_lines = list()
-        self.content = IconContent(self.name, self.label_text, icon_height=icon_height, custom_actor=custom_actor, padding=padding)
+        self.content = IconContent(self.name, self.label_text, icon_size=icon_size, custom_actor=custom_actor, padding=padding)
         self.content.connect('button-release-event', self._on_icon_click)
         candies2.ToolTipManager.__init__(self, tooltip_actor=self.tooltip, content_actor=self.content, h_direction='left', v_direction='bottom', clickable=clickable, long_click=False, tooltip_duration=3000, animation_duration=300, tooltip_x_padding=10, tooltip_y_padding=0)
         easyevent.User.__init__(self)
@@ -210,7 +210,7 @@ class ToolTipLine(candies2.OptionLine):
 class IconContent(candies2.BaseContainer):
     __gtype_name__ = 'IconContent'
     
-    def __init__(self, name, text, icon_height=32, custom_actor=None, icon_path=None, padding=8, spacing=8, texture=None):
+    def __init__(self, name, text, icon_size=(48, 48), custom_actor=None, icon_path=None, padding=8, spacing=8, texture=None):
         candies2.BaseContainer.__init__(self)
         self._padding = candies2.Padding(padding)
         self._spacing = candies2.Spacing(spacing)
@@ -229,7 +229,7 @@ class IconContent(candies2.BaseContainer):
         self.background.set_radius(10)
         self._add(self.background)
         # icon
-        self.icon_height = icon_height
+        self.icon_size = icon_size
         self.icon_path = icon_path
         self.icon = clutter.Texture()
         if icon_path:
@@ -321,14 +321,14 @@ class IconContent(candies2.BaseContainer):
         if for_height != -1:
             for_height -= 2*self._padding.y
         if len(self.label.get_text()) > 0:
-            preferred_width = self.icon_height + 2*self._padding.x + self._spacing.x
+            preferred_width = self.icon_size[0] + 2*self._padding.x + self._spacing.x
             preferred_width += self.label.get_preferred_width(for_height)[1]
         else:
-            preferred_width = self.icon_height + 2*self._padding.x
+            preferred_width = self.icon_size[0] + 2*self._padding.x
         return preferred_width, preferred_width
     
     def do_get_preferred_height(self, for_width):
-        preferred_height = self.icon_height + 2*self._padding.y
+        preferred_height = self.icon_size[1] + 2*self._padding.y
         return preferred_height, preferred_height
     
     def do_allocate(self, box, flags):
@@ -344,12 +344,12 @@ class IconContent(candies2.BaseContainer):
         self.background.allocate(background_box, flags)
         
         # icon
-        icon_y_padding = int(float(main_height - self.icon_height)/2.0)
+        icon_y_padding = int(float(main_height - self.icon_size[1])/2.0)
         icon_box = clutter.ActorBox()
         icon_box.x1 = self._padding.x
         icon_box.y1 = icon_y_padding
-        icon_box.x2 = self._padding.x + self.icon_height
-        icon_box.y2 = icon_box.y1 + self.icon_height
+        icon_box.x2 = self._padding.x + self.icon_size[0]
+        icon_box.y2 = icon_box.y1 + self.icon_size[1]
         if self.custom_actor is not None:
             self.custom_actor.allocate(icon_box, flags)
         else:

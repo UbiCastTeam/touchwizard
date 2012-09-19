@@ -212,13 +212,25 @@ class InfoBar(clutter.Actor, clutter.Container, easyevent.User):
         label = event.content.get('label', '')
         status = event.content.get('status', None)
         src = event.content.get('src', None)
+        size = event.content.get('size', (48, 48))
         custom_actor = event.content.get('custom_actor', None)
         clickable = event.content.get('clickable', False)
         on_click_callback = event.content.get('on_click_callback', None)
         tooltips = event.content.get('tooltips', list())
         callback = event.content.get('callback', None)
         
-        icon = self._icon_manager.add_icon(name, label, status, src, custom_actor, clickable, on_click_callback, tooltips)
+        icon = self._icon_manager.add_icon(
+            name = name,
+            label = label,
+            status = status,
+            icon_src = src,
+            icon_size = size,
+            custom_actor = custom_actor,
+            clickable = clickable,
+            on_click_callback = on_click_callback,
+            tooltips = tooltips
+        )
+        
         if callback is not None:
             try:
                 callback(icon)
@@ -420,11 +432,13 @@ class IconManager(clutter.Actor, clutter.Container):
                 self.tooltip_displayed.display_tooltip(False)
             self.tooltip_displayed = actor
     
-    def add_icon(self, name, label='', status=None, icon_src=None, custom_actor=None, clickable=False, on_click_callback=None, tooltips=list()):
+    def add_icon(self, name, label='', status=None, icon_src=None, icon_size=(48, 48), custom_actor=None, clickable=False, on_click_callback=None, tooltips=list()):
         icon = self.get_icon(dict(name=name))
         if icon is not None:
             return None
-        icon = InfoIcon(name, label=label, status=status, icon_src=icon_src, custom_actor=custom_actor, clickable=clickable, on_click_callback=on_click_callback, tooltips=tooltips, icon_height=self.icon_height, padding=self.icon_padding)
+        icon = InfoIcon(name, label=label, status=status, icon_src=icon_src, icon_size=icon_size, custom_actor=custom_actor, clickable=clickable, on_click_callback=on_click_callback, tooltips=tooltips, padding=self.icon_padding)
+        if icon_size[1] > self.icon_height:
+            self.icon_height = icon_size[1]
         self._add(icon, index=0)
         return icon
     
