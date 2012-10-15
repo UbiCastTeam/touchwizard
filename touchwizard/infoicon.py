@@ -356,7 +356,15 @@ class IconContent(candies2.BaseContainer):
             self.icon.allocate(icon_box, flags)
         
         # status icon
-        self.status_icon.allocate(icon_box, flags)
+        status_icon_width, status_icon_height =  self.status_icon.get_size()
+        status_icon_ratio = status_icon_width / status_icon_height
+        status_box = clutter.ActorBox()
+        status_box.x2 = self._padding.x + self.icon_size[0]
+        status_box.y2 = icon_box.y1 + self.icon_size[1]
+        status_box.y1 = icon_y_padding
+        status_width = (status_box.y2-status_box.y1) * status_icon_ratio
+        status_box.x1 = status_box.x2 - status_width
+        self.status_icon.allocate(status_box, flags)
         
         # label
         label_box = clutter.ActorBox()
