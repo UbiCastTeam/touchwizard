@@ -132,6 +132,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.current_page = page
             logger.info('Reusing already instanciated page %s from cache.',
                                                         self.current_page.name)
+        os.environ["TOUCHWIZARD_CURRENT_PAGE"] = self.current_page.name
+        os.environ.pop("TOUCHWIZARD_REQUESTED_PAGE", None)
         if page.need_loading:
             self.loading.hide()
         self._build_iconbar(icons)
@@ -194,6 +196,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     def do_next_page(self, event):
         name = event.content
         logger.info('Page %r requested.', name)
+        os.environ["TOUCHWIZARD_REQUESTED_PAGE"] = name
         self.current_page.panel.hide()
         self.current_page.panel.unparent()
         icon_states = self.iconbar.get_icon_states()
@@ -220,6 +223,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.evt_request_quit(event)
             return
         logger.info('Back to %r page.', previous.name)
+        os.environ["TOUCHWIZARD_REQUESTED_PAGE"] = previous.name
         self.current_page.panel.hide()
         gobject.idle_add(self.current_page.panel.unparent)
         if previous.need_loading:
