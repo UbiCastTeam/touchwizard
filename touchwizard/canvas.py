@@ -79,7 +79,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.first_page = first_page
         self.available_pages = dict()
         self.current_page = None
-        self.register_event('next_page', 'previous_page')
+        self.register_event('next_page', 'previous_page', 'refresh_page')
         self.register_event('request_quit')
         gobject.idle_add(self.lookup_pages)
         gobject.idle_add(self.display_page, first_page)
@@ -231,7 +231,25 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         if not self.current_page.reuse:
             gobject.idle_add(self.current_page.panel.destroy)
         gobject.idle_add(self.display_page, previous, icons)
-    
+
+    def evt_refresh_page(self, event):
+        gobject.idle_add(self.do_refresh_page, event)
+        self.unregister_event('refresh_page')
+
+    def do_refresh_page(self, event):
+        name = self.current_page.name
+        logger.info('Page %r refresh requested.', name)
+        self.current_page.panel.hide()
+        self.current_page.panel.unparent()
+        gobject.idle_add(self.current_page.panel.destroy)
+        icon_states = self.iconbar.get_icon_states()
+        new_page = self.available_pages[name]
+        self.iconbar.clear(keep_back=True)
+        if new_page.need_loading:
+            self.loading.show()
+        gobject.idle_add(self.display_page, new_page)
+        self.register_event('refresh_page')
+
     def evt_request_quit(self, event):
         self.evt_request_quit = self.evt_request_quit_fake
         logger.info('Quit requested.')
