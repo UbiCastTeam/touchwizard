@@ -261,8 +261,8 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
                 if callable(prepare_quit):
                     logger.info('prepare_quit callback found')
                     prepare_quit()
-        except Exception:
-            pass
+        except Exception, e:
+            logger.warning("Failed to call prepare_quit method in page %s: %s", self.current_page, e)
         self.launch_event('wizard_quit')
     
     def evt_request_quit_fake(self, event):
