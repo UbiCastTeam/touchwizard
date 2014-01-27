@@ -189,3 +189,4 @@ class IconBar(clutter.Actor, clutter.Container, easyevent.User):
     
     def do_pick(self, color):
         self.do_paint()
+

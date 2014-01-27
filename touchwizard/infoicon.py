@@ -140,7 +140,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
                     self.tooltip.remove_element('line_%s' %line_id)
                     self.tooltip_lines.remove(line)
                 break
-        if line == None:
+        if line is None:
             if not delete:
                 if text == None:
                     text = ''
