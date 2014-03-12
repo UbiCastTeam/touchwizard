@@ -425,6 +425,7 @@ class IconManager(clutter.Actor, clutter.Container):
         self.icon_height = 48
         self.icon_padding = 8
         self.tooltip_displayed = None
+        self.display_icon_gid = None
     
     def on_tooltip_display(self, actor, displayed):
         if displayed:
@@ -443,6 +444,12 @@ class IconManager(clutter.Actor, clutter.Container):
         return icon
     
     def display_icon_tooltip(self, params=dict):
+        # Cancel initial tooltip request: content has already changed
+        if self.display_icon_gid is not None:
+            gobject.source_remove(self.display_icon_gid)
+        self.display_icon_gid = gobject.timeout_add(800, self._display_icon_tooltip, params)
+
+    def _display_icon_tooltip(self, params):
         icon = self.get_icon(params)
         if icon is not None:
             if 'status' in params:
