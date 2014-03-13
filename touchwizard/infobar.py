@@ -444,12 +444,6 @@ class IconManager(clutter.Actor, clutter.Container):
         return icon
     
     def display_icon_tooltip(self, params=dict):
-        # Cancel initial tooltip request: content has already changed
-        if self.display_icon_gid is not None:
-            gobject.source_remove(self.display_icon_gid)
-        self.display_icon_gid = gobject.timeout_add(800, self._display_icon_tooltip, params)
-
-    def _display_icon_tooltip(self, params):
         icon = self.get_icon(params)
         if icon is not None:
             if 'status' in params:
@@ -458,9 +452,16 @@ class IconManager(clutter.Actor, clutter.Container):
                 for tooltip in params['tooltips']:
                     if 'id' in tooltip:
                         icon.set_tooltip_line(tooltip['id'], tooltip.get('status', None), tooltip.get('text', None), tooltip.get('delete', False))
-            icon.display_tooltip(True)
+            # Cancel initial tooltip request: content has already changed
+            if self.display_icon_gid is not None:
+                gobject.source_remove(self.display_icon_gid)
+            self.display_icon_gid = gobject.timeout_add(800, self._display_tooltip, icon)
         return False
-    
+
+    def _display_tooltip(self, icon):
+        icon.display_tooltip(True)
+        self.display_icon_gid = None
+
     def modify_icon(self, params=dict()):
         icon = self.get_icon(params)
         if icon is not None:
