@@ -5,6 +5,7 @@ import gobject
 import easyevent
 import logging
 import os
+import time
 
 from touchwizard.loading import LoadingWidget
 
@@ -47,6 +48,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         
         self.background = None
         self.last_page_name = None
+        self.last_page_timestamp = None
         self.previous_page_locked = False
         self.previous_page_timeout_id = None
 
@@ -143,6 +145,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.current_page.panel.prepare()
         self.current_page.panel.show()
         self.previous_page_locked = False
+        self.last_page_name = page.name
     
     def _build_iconbar(self, icons):
         import touchwizard
@@ -194,19 +197,24 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.unregister_event('next_page')
 
     def do_next_page(self, event):
+        now = time.time()
         name = event.content
-        logger.info('Page %r requested.', name)
-        os.environ["TOUCHWIZARD_REQUESTED_PAGE"] = name
-        self.current_page.panel.hide()
-        self.current_page.panel.unparent()
-        icon_states = self.iconbar.get_icon_states()
-        self.history.append((self.current_page, icon_states))
-        new_page = self.available_pages[name]
-        self.iconbar.clear(keep_back=True)
-        if new_page.need_loading:
-            self.loading.show()
-        gobject.idle_add(self.display_page, new_page)
-        self.register_event('next_page')
+        if not self.last_page_timestamp or (now - self.last_page_timestamp) > 0.5:
+            logger.info('Page %r requested.', name)
+            os.environ["TOUCHWIZARD_REQUESTED_PAGE"] = name
+            self.current_page.panel.hide()
+            self.current_page.panel.unparent()
+            icon_states = self.iconbar.get_icon_states()
+            self.history.append((self.current_page, icon_states))
+            new_page = self.available_pages[name]
+            self.iconbar.clear(keep_back=True)
+            if new_page.need_loading:
+                self.loading.show()
+            gobject.idle_add(self.display_page, new_page)
+            self.register_event('next_page')
+        else:
+            logger.warning('Page %s requested too quickly twice in a row (less than 500ms), not displaying' %name)
+        self.last_page_timestamp = now
     
     def evt_previous_page(self, event):
         if not self.previous_page_locked:
