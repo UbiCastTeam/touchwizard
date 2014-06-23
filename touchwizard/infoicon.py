@@ -2,7 +2,6 @@
 
 import os
 import clutter
-import gobject
 import easyevent
 import candies2
 import logging
