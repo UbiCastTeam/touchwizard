@@ -39,7 +39,7 @@ class InfoIcon(candies2.ToolTipManager, easyevent.User):
         self.tooltip_lines = list()
         self.content = IconContent(self.name, self.label_text, icon_size=icon_size, custom_actor=custom_actor, padding=padding)
         self.content.connect('button-release-event', self._on_icon_click)
-        candies2.ToolTipManager.__init__(self, tooltip_actor=self.tooltip, content_actor=self.content, h_direction='left', v_direction='bottom', clickable=clickable, long_click=False, tooltip_duration=3000, animation_duration=300, tooltip_x_padding=10, tooltip_y_padding=0)
+        candies2.ToolTipManager.__init__(self, tooltip_actor=self.tooltip, content_actor=self.content, h_direction='left', v_direction='bottom', clickable=clickable, long_click=False, tooltip_duration=5000, animation_duration=300, tooltip_x_padding=10, tooltip_y_padding=0)
         easyevent.User.__init__(self)
         
         # Apply skin
