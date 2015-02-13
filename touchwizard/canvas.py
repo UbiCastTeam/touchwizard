@@ -193,7 +193,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     
     def evt_next_page(self, event):
         if self.last_page_name is None or self.last_page_name != event.content:
-            gobject.idle_add(self.do_next_page, event)
+            gobject.idle_add(self.do_next_page, event, priority=gobject.PRIORITY_HIGH)
             self.unregister_event('next_page')
 
     def do_next_page(self, event):
