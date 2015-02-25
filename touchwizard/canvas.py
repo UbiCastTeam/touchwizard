@@ -193,7 +193,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
     
     def evt_next_page(self, event):
         if self.last_page_name is None or self.last_page_name != event.content:
-            gobject.idle_add(self.do_next_page, event, priority=gobject.PRIORITY_HIGH)
+            gobject.timeout_add(100, self.do_next_page, event, priority=gobject.PRIORITY_HIGH)
             self.unregister_event('next_page')
 
     def do_next_page(self, event):
@@ -221,7 +221,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.previous_page_locked = True
             if self.previous_page_timeout_id is not None:
                 gobject.source_remove(self.previous_page_timeout_id)
-            self.previous_page_timeout_id = gobject.timeout_add(300, self.do_previous_page, event)
+            self.previous_page_timeout_id = gobject.timeout_add(300, self.do_previous_page, event, priority=gobject.PRIORITY_HIGH)
 
     def do_previous_page(self, event):
         try:
