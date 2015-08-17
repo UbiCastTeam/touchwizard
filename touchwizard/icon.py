@@ -10,6 +10,7 @@ import touchwizard
 
 logger = logging.getLogger('touchwizard')
 
+
 class IconRef(object):
     """Abtract reference to an Icon instance. Avoid the need to instanciate
     several times the same icon. Allows to change some initial states of
@@ -18,8 +19,7 @@ class IconRef(object):
     Used for abstract page declarations.
     """
 
-    def __init__(self, icon, label=None, is_locked=None, is_on=False, is_hided = False,
-                                                cooldown=None, condition=True, glow_animation=False):
+    def __init__(self, icon, label=None, is_locked=None, is_on=False, is_hided=False, cooldown=None, condition=True, glow_animation=False):
         self.icon = icon
         self.label = label
         self.glow_animation = glow_animation
@@ -74,8 +74,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
           receiving an action_icon_<name> event type with a content set to
           Icon.ACTION_OPERATE_ONLY or Icon.ACTION_ANIMATE_AND_OPERATE.
     """
-    ACTION_ANIMATE_AND_OPERATE, ACTION_ANIMATE_ONLY, ACTION_OPERATE_ONLY = \
-                                                                       range(3)
+    ACTION_ANIMATE_AND_OPERATE, ACTION_ANIMATE_ONLY, ACTION_OPERATE_ONLY = range(3)
     __gtype_name__ = 'Icon'
     default_cooldown = 500
     actioned_event_type_pattern = 'icon_%s_actioned'
@@ -89,7 +88,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         if label is None:
             label = name.replace('_', ' ').title()
         self.label_text = label
-        self.event_type = self.actioned_event_type_pattern %(name)
+        self.event_type = self.actioned_event_type_pattern % name
         self.cooldown_ms = self.default_cooldown
         self.is_locked = False
         self.is_hided = False
@@ -109,26 +108,26 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         easyevent.User.__init__(self)
 
         # Remotely (un)lock icon
-        lock_event_type = self.lock_event_type_pattern %(self.name)
-        #logger.debug('Registering to event type %s.', lock_event_type)
+        lock_event_type = self.lock_event_type_pattern % self.name
+        # logger.debug('Registering to event type %s.', lock_event_type)
         self.register_event(lock_event_type)
         setattr(self, 'evt_' + lock_event_type, self.evt_lock_icon)
 
         # Remotely (un)hide icon
-        hide_event_type = self.hide_event_type_pattern %(self.name)
-        #logger.debug('Registering to event type %s.', lock_event_type)
+        hide_event_type = self.hide_event_type_pattern % self.name
+        # logger.debug('Registering to event type %s.', lock_event_type)
         self.register_event(hide_event_type)
         setattr(self, 'evt_' + hide_event_type, self.evt_hide_icon)
 
         # Remotely set icon parameters
-        set_event_type = self.set_event_type_pattern %(self.name)
-        #logger.debug('Registering to event type %s.', lock_event_type)
+        set_event_type = self.set_event_type_pattern % self.name
+        # logger.debug('Registering to event type %s.', lock_event_type)
         self.register_event(set_event_type)
         setattr(self, 'evt_' + set_event_type, self.evt_set_icon)
 
         # Remotely simulate a button click (operation and/or animation)
-        action_event_type = self.action_event_type_pattern %(self.name)
-        #logger.debug('Registering to event type %s.', action_event_type)
+        action_event_type = self.action_event_type_pattern % self.name
+        # logger.debug('Registering to event type %s.', action_event_type)
         self.register_event(action_event_type)
         setattr(self, 'evt_' + action_event_type, self.action)
 
@@ -147,16 +146,14 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
 
         self.timeline = clutter.Timeline(600)
         alpha = clutter.Alpha(self.timeline, clutter.EASE_OUT_ELASTIC)
-        self.animation = \
-                        clutter.BehaviourScale(1.1, 1.1, 1.0, 1.0, alpha=alpha)
+        self.animation = clutter.BehaviourScale(1.1, 1.1, 1.0, 1.0, alpha=alpha)
         self.animation.apply(self.picture)
 
         if self.glow_animation:
             self.anim_timeline = clutter.Timeline(1000)
             self.anim_timeline.connect('completed', self._on_anim_finish)
             anim_alpha = clutter.Alpha(self.anim_timeline, clutter.EASE_IN_OUT_SINE)
-            self.animation_effect = \
-                            clutter.BehaviourOpacity(70, 255, alpha=anim_alpha)
+            self.animation_effect = clutter.BehaviourOpacity(70, 255, alpha=anim_alpha)
             self.anim_timeline.set_loop(True)
             self.animation_effect.apply(self.picture)
 
@@ -168,9 +165,9 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     def update_text(self):
         if self.is_toggle():
             if self.is_on:
-                self.label.set_text("%s: on" %self.label_text)
+                self.label.set_text("%s: on" % self.label_text)
             else:
-                self.label.set_text("%s: off" %self.label_text)
+                self.label.set_text("%s: off" % self.label_text)
         else:
             self.label.set_text(self.label_text)
 
@@ -182,10 +179,10 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     def _build_picture(self):
         import touchwizard
         images_path = touchwizard.images_path or ''
-        picture_path = os.path.join(images_path, 'iconbar', '%s.png' %(self.name))
+        picture_path = os.path.join(images_path, 'iconbar', '%s.png' % self.name)
 
-        picture_on = os.path.join(images_path, 'iconbar', '%s_on.png' %(self.name))
-        picture_off = os.path.join(images_path, 'iconbar', '%s_off.png' %(self.name))
+        picture_on = os.path.join(images_path, 'iconbar', '%s_on.png' % self.name)
+        picture_off = os.path.join(images_path, 'iconbar', '%s_off.png' % self.name)
         if os.path.exists(picture_on):
             self.picture_on = picture_on
         if os.path.exists(picture_off):
@@ -287,10 +284,10 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         boxes[self.picture].x2 = boxes[self.picture].x1 + picture_width
         boxes[self.label].x2 = boxes[self.label].x1 + label_width
 
-        #self.lblback.allocate(boxes[self.label], flags)
+        # self.lblback.allocate(boxes[self.label], flags)
         self.label.allocate(boxes[self.label], flags)
         self.picture.allocate(boxes[self.picture], flags)
-        #self.back.allocate(clutter.ActorBox(0, 0, icon_width, icon_height), flags)
+        # self.back.allocate(clutter.ActorBox(0, 0, icon_width, icon_height), flags)
         clutter.Actor.do_allocate(self, box, flags)
 
     def action(self, event=None, source=None):
@@ -301,7 +298,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             if isinstance(event.content, dict):
                 what_to_do = event.content['action']
                 new_state = event.content['state']
-        
+
         actions = (self.ACTION_ANIMATE_AND_OPERATE, self.ACTION_ANIMATE_ONLY)
         if self.is_locked:
             actions = (self.ACTION_ANIMATE_ONLY, )
@@ -317,8 +314,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
                 self.launch_event(self.event_type, self.is_on)
             else:
                 if self.cooldown_ms >= 1000:
-                    self.launch_event('info_message',
-                           'Please wait %d seconds' %(self.cooldown_ms / 1000))
+                    self.launch_event('info_message', 'Please wait %d seconds' % (self.cooldown_ms / 1000))
 
     def animate(self):
         self.animate_id = None
@@ -329,18 +325,17 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             else:
                 self.anim_timeline.stop()
 
-
     def toggle(self, new_state=None):
         if self.is_toggle():
             if new_state is None:
                 self.is_on = not self.is_on
-                if self.is_on:
-                    self.label.set_text("%s: on" %self.label_text)
-                else:
-                    self.label.set_text("%s: off" %self.label_text)
             else:
-                logger.debug('in icon: New state is %s', new_state)
+                logger.debug('in icon: new state is %s', new_state)
                 self.is_on = new_state
+            if self.is_on:
+                self.label.set_text("%s: on" % self.label_text)
+            else:
+                self.label.set_text("%s: off" % self.label_text)
             picture_path = self.picture_off
             if self.is_on:
                 picture_path = self.picture_on
@@ -377,7 +372,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
                     value = str(value)
                     if not hasattr(self, 'base_text'):
                         self.base_text = self.label_text
-                    self.label_text = '%s %s' %(self.base_text, value)
+                    self.label_text = '%s %s' % (self.base_text, value)
                 self.update_text()
 
     def evt_lock_icon(self, event):
@@ -385,26 +380,25 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             operation = 'lock'
         else:
             operation = 'unlock'
-        logger.debug('in icon: Remote %s request received for %s.',
-                                                          operation, self.name)
+        logger.debug('in icon: Remote %s request received for %s.', operation, self.name)
         call_method = getattr(self, operation)
         call_method()
 
     def evt_hide_icon(self, event):
-        if event.content is not False :
+        if event.content is not False:
             self.hide()
-        else :
+        else:
             self.show()
 
     def do_foreach(self, func, data=None):
         children = (self.label, self.picture)
-        #children = (self.back, self.lblback) + children
+        # children = (self.back, self.lblback) + children
         for child in children:
             func(child, data)
 
     def do_paint(self):
         children = (self.label, self.picture)
-        #children = (self.back, self.lblback) + children
+        # children = (self.back, self.lblback) + children
         for child in children:
             child.paint()
 
@@ -413,6 +407,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
 
     def do_destroy(self):
         self.unregister_all_events()
+
 
 class IconPicture(clutter.Texture):
     __gtype_name__ = 'IconPicture'
