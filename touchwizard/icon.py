@@ -28,7 +28,6 @@ class IconRef(object):
         self.is_on = is_on
         self.cooldown = cooldown
         self.condition = condition
-        self.lock_in_queue = False
 
     def get_icon(self):
         icon = Icon(self.icon.name, self.icon.label_text)
@@ -91,6 +90,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         self.label_text = label
         self.event_type = self.actioned_event_type_pattern % name
         self.cooldown_ms = self.default_cooldown
+        self.lock_in_queue = False
         self.is_locked = False
         self.is_hided = False
         self.is_on = False
