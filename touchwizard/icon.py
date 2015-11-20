@@ -28,6 +28,7 @@ class IconRef(object):
         self.is_on = is_on
         self.cooldown = cooldown
         self.condition = condition
+        self.lock_in_queue = False
 
     def get_icon(self):
         icon = Icon(self.icon.name, self.icon.label_text)
@@ -351,13 +352,16 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
 
     def lock_for(self, duration):
         self.lock()
-        gobject.timeout_add(duration, self.unlock)
+        gobject.timeout_add(duration, self.unlock, True)
 
-    def unlock(self):
-        logger.debug('in icon: unlocking %s.', self.name)
-        self.is_locked = False
-        self.picture.set_reactive(True)
-        self.picture.set_opacity(255)
+    def unlock(self, for_cooldown=False):
+        if not for_cooldown or not self.lock_in_queue:
+            logger.debug('in icon: unlocking %s.', self.name)
+            self.is_locked = False
+            self.picture.set_reactive(True)
+            self.picture.set_opacity(255)
+        else:
+            logger.debug('in icon: ignoring unlock because of an explicit lock during cooldown on %s.', self.name)
         return False
 
     def evt_set_icon(self, event):
@@ -376,16 +380,17 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
                 self.update_text()
 
     def evt_lock_icon(self, event):
-        if event.content is not False:
+        if event.content:
             operation = 'lock'
         else:
             operation = 'unlock'
+        self.lock_in_queue = event.content
         logger.debug('in icon: Remote %s request received for %s.', operation, self.name)
         call_method = getattr(self, operation)
         call_method()
 
     def evt_hide_icon(self, event):
-        if event.content is not False:
+        if event.content:
             self.hide()
         else:
             self.show()
