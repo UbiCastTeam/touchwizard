@@ -166,22 +166,34 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
                     previous_icon = self.previous_icon
             else:
                 previous_icon = self.home_icon
+        condition = True
         if isinstance(previous_icon, touchwizard.IconRef):
+            if callable(previous_icon.condition):
+                condition = previous_icon.condition()
+            else:
+                condition = previous_icon.condition
             previous_icon = previous_icon.get_icon()
-        previous_icon.build()
-        self.iconbar.set_previous(previous_icon)
+        if condition:
+            previous_icon.build()
+            self.iconbar.set_previous(previous_icon)
 
         # Icon "next"
+        condition = True
         if next_icon is not None:
             if isinstance(next_icon, touchwizard.IconRef):
+                if callable(next_icon.condition):
+                    condition = next_icon.condition()
+                else:
+                    condition = next_icon.condition
                 next_icon = next_icon.get_icon()
-            next_icon.build()
-            self.iconbar.set_next(next_icon)
+            if condition:
+                next_icon.build()
+                self.iconbar.set_next(next_icon)
 
         # Other icons
         for icon in icons:
             if isinstance(icon, touchwizard.IconRef):
-                if not isinstance(icon.condition, bool):
+                if callable(icon.condition):
                     condition = icon.condition()
                 else:
                     condition = icon.condition
