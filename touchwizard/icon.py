@@ -12,7 +12,9 @@ logger = logging.getLogger('touchwizard')
 
 
 class IconRef(object):
-    """Abtract reference to an Icon instance. Avoid the need to instanciate
+    """Abtract reference to an Icon instance.
+
+    Avoid the need to instanciate
     several times the same icon. Allows to change some initial states of
     the referenced icon without changing the icon itself.
 
@@ -45,7 +47,9 @@ class IconRef(object):
 
 
 class Icon(clutter.Actor, clutter.Container, easyevent.User):
-    """Represent a icon. Instanciated when defining an abstract page and built
+    """Represent an icon.
+
+    Instanciated when defining an abstract page and built
     as a clutter actor at runtime.
 
     (Note: the event types depends on the icon name passed to the constructor.)
@@ -56,8 +60,11 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
           Lock the icon (make it disabled) if the content is True or not set.
           Unlock the icon (make it enabled) it the content is False.
 
+      - hide_icon_<name> (bool)
+          Hide the icon or show it dependind on the given parameter.
+
       - set_icon_<name> ({'toset': 'label', 'value': 'New text'})
-          Reset some of the icon attributes
+          Reset some of the icon attributes.
 
       - action_icon_<name> (what_to_do)
           Simulates an icon push. Depending on the content value, either it
@@ -74,6 +81,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
           receiving an action_icon_<name> event type with a content set to
           Icon.ACTION_OPERATE_ONLY or Icon.ACTION_ANIMATE_AND_OPERATE.
     """
+
     ACTION_ANIMATE_AND_OPERATE, ACTION_ANIMATE_ONLY, ACTION_OPERATE_ONLY = range(3)
     __gtype_name__ = 'Icon'
     default_cooldown = 500
@@ -84,6 +92,8 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
     action_event_type_pattern = 'action_icon_%s'
 
     def __init__(self, name, label=None):
+        clutter.Actor.__init__(self)
+        easyevent.User.__init__(self)
         self.name = name
         if label is None:
             label = name.replace('_', ' ').title()
@@ -108,29 +118,7 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
         clutter.Actor.__init__(self)
         easyevent.User.__init__(self)
 
-        # Remotely (un)lock icon
-        lock_event_type = self.lock_event_type_pattern % self.name
-        # logger.debug('Registering to event type %s.', lock_event_type)
-        self.register_event(lock_event_type)
-        setattr(self, 'evt_' + lock_event_type, self.evt_lock_icon)
-
-        # Remotely (un)hide icon
-        hide_event_type = self.hide_event_type_pattern % self.name
-        # logger.debug('Registering to event type %s.', lock_event_type)
-        self.register_event(hide_event_type)
-        setattr(self, 'evt_' + hide_event_type, self.evt_hide_icon)
-
-        # Remotely set icon parameters
-        set_event_type = self.set_event_type_pattern % self.name
-        # logger.debug('Registering to event type %s.', lock_event_type)
-        self.register_event(set_event_type)
-        setattr(self, 'evt_' + set_event_type, self.evt_set_icon)
-
-        # Remotely simulate a button click (operation and/or animation)
-        action_event_type = self.action_event_type_pattern % self.name
-        # logger.debug('Registering to event type %s.', action_event_type)
-        self.register_event(action_event_type)
-        setattr(self, 'evt_' + action_event_type, self.action)
+        self.register_events()
 
         self.label = candies2.StretchText()
         self.label.set_font_name('Sans 16')
@@ -157,6 +145,31 @@ class Icon(clutter.Actor, clutter.Container, easyevent.User):
             self.animation_effect = clutter.BehaviourOpacity(70, 255, alpha=anim_alpha)
             self.anim_timeline.set_loop(True)
             self.animation_effect.apply(self.picture)
+
+    def register_events(self):
+        # Remotely (un)lock icon
+        lock_event_type = self.lock_event_type_pattern % self.name
+        # logger.debug('Registering to event type %s.', lock_event_type)
+        self.register_event(lock_event_type)
+        setattr(self, 'evt_' + lock_event_type, self.evt_lock_icon)
+
+        # Remotely (un)hide icon
+        hide_event_type = self.hide_event_type_pattern % self.name
+        # logger.debug('Registering to event type %s.', lock_event_type)
+        self.register_event(hide_event_type)
+        setattr(self, 'evt_' + hide_event_type, self.evt_hide_icon)
+
+        # Remotely set icon parameters
+        set_event_type = self.set_event_type_pattern % self.name
+        # logger.debug('Registering to event type %s.', lock_event_type)
+        self.register_event(set_event_type)
+        setattr(self, 'evt_' + set_event_type, self.evt_set_icon)
+
+        # Remotely simulate a button click (operation and/or animation)
+        action_event_type = self.action_event_type_pattern % self.name
+        # logger.debug('Registering to event type %s.', action_event_type)
+        self.register_event(action_event_type)
+        setattr(self, 'evt_' + action_event_type, self.action)
 
     def _on_anim_finish(self, timeline):
         current_direction = timeline.get_direction()

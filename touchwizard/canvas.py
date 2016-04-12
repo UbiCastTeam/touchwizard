@@ -13,7 +13,7 @@ logger = logging.getLogger('touchwizard')
 
 
 class Canvas(clutter.Actor, clutter.Container, easyevent.User):
-    """ Wizard main actor which manages the user interface and pages.
+    """Wizard main actor which manages the user interface and pages.
 
     Listen for event:
 
@@ -36,6 +36,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
           Sent after prepare_quit callback to notify the main script that it
           can end the process.
     """
+
     __gtype_name__ = 'Canvas'
     # infobar_height = 104
     # iconbar_height = 200
@@ -158,6 +159,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             next_icon = self.current_page.next
 
         # Icon "previous"
+        self.home_icon.unregister_all_events()
         if previous_icon is None:
             if self.history:
                 last_page, last_icons = self.history[-1]
@@ -165,6 +167,7 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
                 if previous_icon is None:
                     previous_icon = self.previous_icon
             else:
+                self.home_icon.register_events()
                 previous_icon = self.home_icon
         condition = True
         if isinstance(previous_icon, touchwizard.IconRef):
@@ -262,7 +265,6 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
         self.current_page.panel.hide()
         self.current_page.panel.unparent()
         gobject.idle_add(self.current_page.panel.destroy)
-        icon_states = self.iconbar.get_icon_states()
         new_page = self.available_pages[name]
         self.iconbar.clear(keep_back=True)
         if new_page.need_loading:
