@@ -239,20 +239,27 @@ class Canvas(clutter.Actor, clutter.Container, easyevent.User):
             self.previous_page_timeout_id = gobject.timeout_add(300, self.do_previous_page, event, priority=gobject.PRIORITY_HIGH)
 
     def do_previous_page(self, event):
-        try:
-            previous, icons = self.history.pop()
-        except IndexError:
-            # logger.error('Previous page requested but history is empty.')
-            self.evt_request_quit(event)
-            return
-        logger.info('Back to %r page.', previous.name)
-        os.environ["TOUCHWIZARD_REQUESTED_PAGE"] = previous.name
-        self.current_page.panel.hide()
-        gobject.idle_add(self.current_page.panel.unparent)
-        if previous.need_loading:
-            self.loading.show()
-        if not self.current_page.reuse:
-            gobject.idle_add(self.current_page.panel.destroy)
+        name = None
+        if event.content:
+            name = event.content
+        for page, icons in self.history[::-1]:
+            try:
+                previous, icons = self.history.pop()
+            except IndexError:
+                # logger.error('Previous page requested but history is empty.')
+                self.evt_request_quit(event)
+                return
+            logger.info('Back to %r page.', previous.name)
+            os.environ["TOUCHWIZARD_REQUESTED_PAGE"] = previous.name
+            self.current_page.panel.hide()
+            gobject.idle_add(self.current_page.panel.unparent)
+            if previous.need_loading:
+                self.loading.show()
+            if not self.current_page.reuse:
+                gobject.idle_add(self.current_page.panel.destroy)
+            if name is None or page.name == name:
+                break
+            self.current_page = page
         gobject.idle_add(self.display_page, previous, icons)
 
     def evt_refresh_page(self, event):
